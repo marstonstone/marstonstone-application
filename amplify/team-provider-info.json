@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-marstonstoneapp-dev-74248-authRole",
+      "UnauthRoleArn": "arn:aws:iam::643417047460:role/amplify-marstonstoneapp-dev-74248-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::643417047460:role/amplify-marstonstoneapp-dev-74248-authRole",
+      "Region": "ap-southeast-2",
+      "DeploymentBucketName": "amplify-marstonstoneapp-dev-74248-deployment",
+      "UnauthRoleName": "amplify-marstonstoneapp-dev-74248-unauthRole",
+      "StackName": "amplify-marstonstoneapp-dev-74248",
+      "StackId": "arn:aws:cloudformation:ap-southeast-2:643417047460:stack/amplify-marstonstoneapp-dev-74248/a7f16a40-a595-11ed-b227-06ecad2aac50",
+      "AmplifyAppId": "d321ecfvef2flu"
+    }
+  }
+}
