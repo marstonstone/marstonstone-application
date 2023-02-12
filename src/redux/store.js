@@ -1,11 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-// import { coinsReducer } from "./slices/coinsSlice";
-// import { settingsReducer } from "./slices/settingsSlice";
+import { builderReducer } from "./slices/builderSlice";
+import { authReducer } from "./slices/authSlice";
 
 const store = configureStore({
   reducer: {
-    // coins: coinsReducer,
-    // settings: settingsReducer,
+    auth: authReducer,
+    builder: builderReducer,
   },
 });
 

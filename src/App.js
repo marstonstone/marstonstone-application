@@ -14,6 +14,7 @@ import PageNotFound from "./page/PageNotFound";
 import Customer from "./page/Customer";
 import Home from "./page/Home";
 import Box from "@mui/material/Box";
+import { ThemeProvider, responsiveAppTheme } from "./styles/theme";
 
 function App() {
   const [title, setTitle] = useState(null);
@@ -24,25 +25,27 @@ function App() {
     setTitle(parsedTitle.toUpperCase());
   }, [location]);
   return (
-    <div style={{ display: "flex" }}>
-      <Navbar />
-      <Box style={{ width: "100%" }}>
-        <Header title={title} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/toBeConfirm" element={<ToBeConfirm />} />
-          <Route path="/quotation" element={<Quotation />} />
-          <Route path="/supplier" element={<Supplier />} />
-          <Route path="/supplier/:name" element={<Supplier />} />
-          <Route path="/processing" element={<Processing />} />
-          <Route path="/done" element={<Done />} />
-          <Route path="/customer" element={<Customer />} />
-          <Route path="/404" element={<PageNotFound />} />
-        </Routes>
-      </Box>
+    <ThemeProvider theme={responsiveAppTheme}>
+      <div style={{ display: "flex" }}>
+        <Navbar />
+        <Box style={{ width: "100%" }}>
+          <Header title={title} />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/toBeConfirm" element={<ToBeConfirm />} />
+            <Route path="/quotation" element={<Quotation />} />
+            <Route path="/supplier" element={<Supplier />} />
+            <Route path="/supplier/:name" element={<Supplier />} />
+            <Route path="/processing" element={<Processing />} />
+            <Route path="/done" element={<Done />} />
+            <Route path="/customer" element={<Customer />} />
+            <Route path="/404" element={<PageNotFound />} />
+          </Routes>
+        </Box>
 
-      <ToastContainer autoClose={1500} />
-    </div>
+        <ToastContainer autoClose={1500} />
+      </div>
+    </ThemeProvider>
   );
 }
 

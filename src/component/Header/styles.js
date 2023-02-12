@@ -1,10 +1,9 @@
-import { TEAL_GREEN } from "../../styles/colors";
 export const headerStyles = {
   wrapper: {
     width: "100%",
     display: "flex",
     flexDirection: "column",
-    backgroundColor: `${TEAL_GREEN}`,
+    backgroundColor: `#598372`,
     padding: "20px",
   },
   topRow: {
