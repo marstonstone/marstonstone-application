@@ -6,6 +6,8 @@ export const LIGHT_GRAY = "#f5f5f5";
 
 export const DARK_GRAY = "#212121";
 
+export const NAVY = "#101F33";
+
 export const TEAL_GREEN = "#6D9886";
 
 export const WHITE = "#FFFFFF";
