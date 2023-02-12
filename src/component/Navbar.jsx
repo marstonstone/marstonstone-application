@@ -96,7 +96,7 @@ const navbarStyles = {
       backgroundColor: `${DARK_GRAY}`,
       color: `${WHITE}`,
       position: "relative",
-      height: "100vh",
+      height: "100%",
     },
     "& .Mui-selected": {
       color: `${BROWN}`,
