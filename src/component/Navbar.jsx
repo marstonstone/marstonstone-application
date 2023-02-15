@@ -89,14 +89,14 @@ function Navbar(props) {
 
 const navbarStyles = {
   drawer: {
+    display: "relative",
+    width: 250,
     flexShrink: 0,
-
     "& .MuiDrawer-paper": {
+      width: 250,
       boxSizing: "border-box",
       backgroundColor: `${DARK_GRAY}`,
       color: `${WHITE}`,
-      position: "relative",
-      height: "100%",
     },
     "& .Mui-selected": {
       color: `${BROWN}`,
