@@ -37,7 +37,7 @@ const schema = object({
   supplier: zodEnum(["A", "B", "C", "D"]),
 });
 
-function QuotationForm() {
+function Temp() {
   const [openInstallDetail, setOpenInstallDetail] = useState(false);
   const [isUpstairs, setIsUpstairs] = useState(false);
   const {
@@ -47,6 +47,27 @@ function QuotationForm() {
     reset,
     formState: { errors, isSubmitSuccessful },
   } = useForm({
+    defaultValues: {
+      fName: "",
+      lName: "",
+      mobile: "",
+      email: "",
+      requestInstall: "",
+      address: {
+        unitNo: "",
+        streetNo: "",
+        streetName: "",
+        suburb: "",
+        city: "",
+        state: "",
+        postCode: "",
+        country: "",
+      },
+      isUpstairs: "",
+      floors: "",
+      specialCondition: "",
+      supplier: "",
+    },
     resolver: zodResolver(schema),
   });
   console.log("errors", errors);
@@ -316,4 +337,4 @@ function QuotationForm() {
   );
 }
 
-export default QuotationForm;
+export default Temp;

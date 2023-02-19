@@ -12,10 +12,63 @@ import { useForm, FormProvider } from "react-hook-form";
 import QuotationForm from "../component/quotation/QuotationForm";
 import DrawPad from "../component/quotation/DrawPad";
 import ReviewQuotation from "../component/quotation/ReviewQuotation";
+import { enum as zodEnum, number, object, string, boolean } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = object({
+  fName: string()
+    .min(2, "Please enter a valid first name")
+    .max(32, "First name must be less than 100 characters"),
+  lName: string()
+    .min(2, "Please enter a valid first name")
+    .max(32, "First name must be less than 100 characters"),
+  email: string().email(),
+  mobile: string()
+    .startsWith("04", "Mobile number should start with '04'")
+    .min(10)
+    .max(14),
+  address: object({
+    unitNo: string().optional(),
+    streetNo: string().optional(),
+    streetName: string().optional(),
+    suburb: string().min(3, "Please enter a Suburb").optional(),
+    city: string().optional(),
+    state: string().optional(),
+    postCode: string().optional(),
+    country: string().optional(),
+  }).optional(),
+  isUpstairs: zodEnum(["yes", "no"]).optional(),
+  floors: string().min(1, "Please input a valid floor number").optional(),
+  specialCondition: string().optional(),
+  supplier: zodEnum(["Lavi Stone", "B", "C", "D"]),
+});
 
 function Quotation() {
   const [activeStep, setActiveStep] = useState(0);
-  const methods = useForm();
+  const methods = useForm({
+    defaultValues: {
+      fName: "",
+      lName: "",
+      mobile: "",
+      email: "",
+      // requestInstall: "",
+      // address: {
+      //   unitNo: "",
+      //   streetNo: "",
+      //   streetName: "",
+      //   suburb: "",
+      //   city: "",
+      //   state: "",
+      //   postCode: "",
+      //   country: "",
+      // },
+      // isUpstairs: "",
+      // floors: "",
+      // specialCondition: "",
+      supplier: "Lavi Stone",
+    },
+    resolver: zodResolver(schema),
+  });
 
   const handleNext = () => {
     console.log("next");
@@ -30,6 +83,8 @@ function Quotation() {
     console.log(12345, data);
     handleNext();
   };
+
+  console.log(methods.formState.errors);
 
   const getStepContent = (step, methods, onSubmit, handleBack, handleNext) => {
     switch (step) {

@@ -15,48 +15,49 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enum as zodEnum, number, object, string, boolean } from "zod";
-import AddressForm from "./AddressForm";
-const schema = object({
-  fName: string()
-    .min(2, "Please enter a valid first name")
-    .max(32, "First name must be less than 100 characters"),
-  lName: string()
-    .min(2, "Please enter a valid first name")
-    .max(32, "First name must be less than 100 characters"),
-  email: string().email(),
-  mobile: string()
-    .startsWith("04", "Mobile number should start with '04'")
-    .min(10)
-    .max(14),
-});
 
-function QuotationForm({ handleSubmit }) {
+function QuotationForm() {
+  const [openInstallDetail, setOpenInstallDetail] = useState("no");
+  const [isUpstairs, setIsUpstairs] = useState("no");
+  const [supplier, setSupplier] = useState("Lavi Stone");
+  const methods = useFormContext();
+
+  const unregisterKeys = ["address", "isUpstairs", "supplier", "floors"];
+
   const {
     register,
-    control,
-    // handleSubmit,
     reset,
+    control,
+    unregister,
+    setValue,
     formState: { errors, isSubmitSuccessful },
-  } = useFormContext({
-    defaultValues: {
-      fName: "",
-      lName: "",
-      mobile: "",
-      email: "",
-    },
-    resolver: zodResolver(schema),
-  });
+  } = methods;
   console.log("errors", errors);
 
-  const handleSave = (formValue) => {
-    console.log(formValue);
-  };
+  // const handleSave = (formValue) => {
+  //   console.log(formValue);
+  // };
+  useEffect(() => {
+    if (openInstallDetail === "no") {
+      unregister(unregisterKeys);
+    }
+  }, []);
 
   useEffect(() => {
     if (isSubmitSuccessful) {
       reset();
     }
   }, [isSubmitSuccessful, reset]);
+  const { field } = useController({ name: "supplier", control });
+  const supplierSet = ["Lavi Stone", "B", "C", "D"];
+
+  const handleSelectChange = (option) => {
+    // console.log(option);
+    setSupplier(option.target.value);
+    // console.log("option", option.target.value);
+    field.onChange(option.target.value);
+    // field.onChange(option);
+  };
 
   return (
     <Box>
@@ -106,11 +107,180 @@ function QuotationForm({ handleSubmit }) {
           />
         </Grid>
       </Grid>
+
       <Typography variant="h5" gutterBottom mt={4}>
         Installation Detial
       </Typography>
-      {/* <AddressForm handleSubmit={handleSubmit} /> */}
-      <Button type="submit">Next</Button>
+      <FormControl>
+        <FormLabel>Request for Installation</FormLabel>
+        <RadioGroup
+          row
+          {...register("requestInstall")}
+          value={openInstallDetail}
+          onChange={(e) => {
+            unregister(unregisterKeys);
+
+            setOpenInstallDetail(e.target.value);
+          }}
+        >
+          <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+          <FormControlLabel value="no" control={<Radio />} label="No" />
+        </RadioGroup>
+      </FormControl>
+
+      {openInstallDetail === "yes" ? (
+        <>
+          {" "}
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            Installation Address
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={3}>
+              <TextField
+                // type="number"
+                {...register("address.unitNo", { required: true })}
+                label="Unit#"
+                fullWidth
+                autoComplete="Install unit number"
+                error={!!errors?.address?.unitNo}
+                helperText={errors?.address?.unitNo?.message ?? null}
+              />
+            </Grid>
+            <Grid item xs={3}>
+              <TextField
+                // type="number"
+                {...register("address.streetNo")}
+                label="Street#"
+                fullWidth
+                autoComplete="Install street number"
+                error={!!errors?.address?.streetNo}
+                helperText={errors?.address?.streetNo?.message ?? null}
+              />
+            </Grid>
+            <Grid item xs={3}>
+              <TextField
+                {...register("address.streetName")}
+                label="Street name"
+                fullWidth
+                autoComplete="Install street name"
+                error={!!errors?.address?.streetName}
+                helperText={errors?.address?.streetName?.message ?? null}
+              />
+            </Grid>
+            <Grid item xs={3}>
+              <TextField
+                {...register("address.suburb", {
+                  required: true,
+                })}
+                label="Suburb"
+                fullWidth
+                autoComplete="Install suburb"
+                error={!!errors?.address?.suburb}
+                helperText={errors?.address?.suburb?.message ?? null}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                {...register("address.city")}
+                label="City"
+                fullWidth
+                autoComplete="Install city"
+                error={!!errors?.address?.city}
+                helperText={errors?.address?.city?.message ?? null}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                {...register("address.state")}
+                label="State/Province/Region"
+                autoComplete="Install state"
+                fullWidth
+                error={!!errors?.address?.state}
+                helperText={errors?.address?.state?.message ?? null}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                // type="number"
+                {...register("address.postCode")}
+                label="Zip / Postal code"
+                fullWidth
+                autoComplete="Install postal-code"
+                error={!!errors?.address?.postCode}
+                helperText={errors?.address?.postCode?.message ?? null}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                {...register("address.country")}
+                label="Country"
+                fullWidth
+                autoComplete="Install country"
+                error={!!errors?.address?.country}
+                helperText={errors?.address?.country?.message ?? null}
+              />
+            </Grid>
+          </Grid>
+          <Grid container spacing={3} mt={2}>
+            <Grid item xs={12}>
+              <FormControl>
+                <FormLabel>Upstairs ? </FormLabel>
+                <RadioGroup
+                  row
+                  value={isUpstairs}
+                  {...register("isUpstairs")}
+                  onChange={(e) => {
+                    unregister("floors");
+                    setIsUpstairs(e.target.value);
+                  }}
+                >
+                  <FormControlLabel
+                    value="yes"
+                    control={<Radio />}
+                    label="Yes"
+                  />
+                  <FormControlLabel value="no" control={<Radio />} label="No" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            {isUpstairs === "yes" ? (
+              <>
+                <Grid item xs={12}>
+                  <TextField
+                    id="floorNo"
+                    {...register("floors")}
+                    label="How many floors"
+                    error={!!errors.floors}
+                    helperText={errors.floors?.message ?? null}
+                  />
+                </Grid>
+              </>
+            ) : (
+              <></>
+            )}
+          </Grid>
+        </>
+      ) : (
+        <></>
+      )}
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <FormLabel mb={2}>Supplier </FormLabel>
+          <Select
+            {...register("supplier", { required: true })}
+            value={supplier}
+            // value={field.value}
+            label="Supplier"
+            onChange={handleSelectChange}
+            error={!!errors.supplier}
+            helperText={errors.supplier?.message ?? null}
+          >
+            {supplierSet.map((supplier) => {
+              return <MenuItem value={supplier}>{supplier}</MenuItem>;
+            })}
+          </Select>
+        </FormControl>
+      </Grid>
       {/* </form> */}
     </Box>
   );

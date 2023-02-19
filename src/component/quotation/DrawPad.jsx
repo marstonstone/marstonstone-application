@@ -1,7 +1,8 @@
 import React from "react";
+// import AddressForm from "./AddressForm";
 
 function DrawPad() {
-  return <div>DrawPad</div>;
+  return <>{/* <AddressForm /> */}</>;
 }
 
 export default DrawPad;

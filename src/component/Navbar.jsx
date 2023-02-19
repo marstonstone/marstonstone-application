@@ -36,16 +36,7 @@ const categories = [
   },
   {
     id: "Suppliers",
-    children: [
-      { id: "Suppliers", icon: <FactoryIcon />, route: "supplier" },
-      { id: "Suppliers", icon: <FactoryIcon />, route: "supplier" },
-      { id: "Suppliers", icon: <FactoryIcon />, route: "supplier" },
-
-      { id: "Suppliers", icon: <FactoryIcon />, route: "supplier" },
-      { id: "Suppliers", icon: <FactoryIcon />, route: "supplier" },
-      { id: "Suppliers", icon: <FactoryIcon />, route: "supplier" },
-      { id: "Suppliers", icon: <FactoryIcon />, route: "supplier" },
-    ],
+    children: [{ id: "Suppliers", icon: <FactoryIcon />, route: "supplier" }],
   },
 ];
 
