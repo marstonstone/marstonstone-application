@@ -1,19 +1,16 @@
 import React, { useState } from "react";
-import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import Tooltip from "@mui/material/Tooltip";
 import { StepLabel, Stepper, Step } from "@mui/material";
 import { Box, Button } from "@mui/material";
 import { useForm, FormProvider } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
 
 import QuotationForm from "../component/quotation/QuotationForm";
 import DrawPad from "../component/quotation/DrawPad";
 import ReviewQuotation from "../component/quotation/ReviewQuotation";
 import { enum as zodEnum, number, object, string, boolean } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { cacheOrder } from "../redux/slices/orderSlice";
 
 const schema = object({
   fName: string()
@@ -27,6 +24,8 @@ const schema = object({
     .startsWith("04", "Mobile number should start with '04'")
     .min(10)
     .max(14),
+  companyName: string().optional(),
+  ABN: string().optional(),
   address: object({
     unitNo: string().optional(),
     streetNo: string().optional(),
@@ -38,37 +37,73 @@ const schema = object({
     country: string().optional(),
   }).optional(),
   isUpstairs: zodEnum(["yes", "no"]).optional(),
-  floors: string().min(1, "Please input a valid floor number").optional(),
+  floors: string().optional(),
   specialCondition: string().optional(),
   supplier: zodEnum(["Lavi Stone", "B", "C", "D"]),
 });
 
 function Quotation() {
   const [activeStep, setActiveStep] = useState(0);
-  const methods = useForm({
-    defaultValues: {
-      fName: "",
-      lName: "",
-      mobile: "",
-      email: "",
-      // requestInstall: "",
-      // address: {
-      //   unitNo: "",
-      //   streetNo: "",
-      //   streetName: "",
-      //   suburb: "",
-      //   city: "",
-      //   state: "",
-      //   postCode: "",
-      //   country: "",
-      // },
-      // isUpstairs: "",
-      // floors: "",
-      // specialCondition: "",
-      supplier: "Lavi Stone",
-    },
-    resolver: zodResolver(schema),
-  });
+  const dispatch = useDispatch();
+  const { order } = useSelector((state) => state.order);
+  console.log("order state", order);
+
+  const methods = useForm();
+
+  // const methods = useForm({
+  //   defaultValues: { ...order },
+  //   defaultValues: {
+  //     fName: "",
+  //     lName: "",
+  //     mobile: "",
+  //     email: "",
+  //     companyName: "",
+  //     ABN: "",
+  //     requestInstall: "",
+  //     address: {
+  //       unitNo: "",
+  //       streetNo: "",
+  //       streetName: "",
+  //       suburb: "",
+  //       city: "",
+  //       state: "",
+  //       postCode: "",
+  //       country: "",
+  //     },
+  //     isUpstairs: "",
+  //     floors: "",
+  //     specialCondition: "",
+  //     supplier: "Lavi Stone",
+  //   },
+  //   resolver: zodResolver(schema),
+  // });
+
+  //have previous values
+  // if (order.fName !== "") {
+  //   methods.setValue({
+  //     fName: order.fName,
+  //     lName: order.lName,
+  //     mobile: "",
+  //     email: "",
+  //     companyName: "",
+  //     ABN: "",
+  //     requestInstall: "",
+  //     address: {
+  //       unitNo: "",
+  //       streetNo: "",
+  //       streetName: "",
+  //       suburb: "",
+  //       city: "",
+  //       state: "",
+  //       postCode: "",
+  //       country: "",
+  //     },
+  //     isUpstairs: "",
+  //     floors: "",
+  //     specialCondition: "",
+  //     supplier: "Lavi Stone",
+  //   });
+  // }
 
   const handleNext = () => {
     console.log("next");
@@ -81,6 +116,7 @@ function Quotation() {
 
   const onSubmit = (data) => {
     console.log(12345, data);
+    dispatch(cacheOrder(data));
     handleNext();
   };
 

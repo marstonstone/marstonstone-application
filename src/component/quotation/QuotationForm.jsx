@@ -17,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { enum as zodEnum, number, object, string, boolean } from "zod";
 
 function QuotationForm() {
-  const [openInstallDetail, setOpenInstallDetail] = useState("no");
+  const [openInstallDetail, setOpenInstallDetail] = useState("yes");
   const [isUpstairs, setIsUpstairs] = useState("no");
   const [supplier, setSupplier] = useState("Lavi Stone");
   const methods = useFormContext();
@@ -39,9 +39,10 @@ function QuotationForm() {
   // };
   useEffect(() => {
     if (openInstallDetail === "no") {
+      console.log("unregister");
       unregister(unregisterKeys);
     }
-  }, []);
+  }, [openInstallDetail]);
 
   useEffect(() => {
     if (isSubmitSuccessful) {
@@ -61,7 +62,7 @@ function QuotationForm() {
 
   return (
     <Box>
-      {/* <form onSubmit={handleSubmit(handleSave)}> */}
+      {/* CUSTOMER DETAIL */}
       <Typography variant="h5" gutterBottom>
         Customer Detail
       </Typography>
@@ -106,8 +107,29 @@ function QuotationForm() {
             helperText={errors.email?.message ?? null}
           />
         </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            {...register("companyName")}
+            label="Company Name"
+            fullWidth
+            autoComplete="company"
+            error={!!errors.companyName}
+            helperText={errors.companyName?.message ?? null}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            {...register("ABN")}
+            label="ABN/ARN"
+            fullWidth
+            autoComplete="ABN"
+            error={!!errors.ABN}
+            helperText={errors.ABN?.message ?? null}
+          />
+        </Grid>
       </Grid>
 
+      {/* INSTALLATION DETAIL */}
       <Typography variant="h5" gutterBottom mt={4}>
         Installation Detial
       </Typography>
@@ -263,7 +285,7 @@ function QuotationForm() {
       ) : (
         <></>
       )}
-      <Grid item xs={12}>
+      <Grid item xs={12} mt={2}>
         <FormControl fullWidth>
           <FormLabel mb={2}>Supplier </FormLabel>
           <Select
@@ -276,10 +298,29 @@ function QuotationForm() {
             helperText={errors.supplier?.message ?? null}
           >
             {supplierSet.map((supplier) => {
-              return <MenuItem value={supplier}>{supplier}</MenuItem>;
+              return (
+                <MenuItem key={supplier} value={supplier}>
+                  {supplier}
+                </MenuItem>
+              );
             })}
           </Select>
         </FormControl>
+      </Grid>
+      <Typography variant="h6" gutterBottom mt={4}>
+        Special Conditions
+      </Typography>
+      <Grid item xs={12} sm={12} mt={2}>
+        <TextField
+          {...register("specialCondition")}
+          label="Writing anything you want..."
+          fullWidth
+          multiline
+          minRows={4}
+          autoComplete="Please write something..."
+          error={!!errors.specialCondition}
+          helperText={errors.specialCondition?.message ?? null}
+        />
       </Grid>
       {/* </form> */}
     </Box>

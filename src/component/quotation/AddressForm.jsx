@@ -1,160 +1,144 @@
 import React from "react";
-import Grid from "@mui/material/Grid";
-import { enum as zodEnum, number, object, string, boolean } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import TextField from "@mui/material/TextField";
-import { useForm, useController, useFormContext } from "react-hook-form";
-import { Box, Button } from "@mui/material";
+import { useForm, Controller } from "react-hook-form";
+import { TextField, Button } from "@mui/material";
+import { object, string } from "zod";
 
-// const addressSchema = object({
-//   address: {
-//     unitNo: number().optional(),
-//     streetNo: number().optional(),
-//     streetName: string().optional(),
-//     suburb: string(),
-//     city: string().optional(),
-//     state: string().optional(),
-//     postCode: number().min(6).optional(),
-//     country: string().optional(),
-//   },
-// });
-function AddressForm({ register, errors }) {
-  //   const {
-  //     register,
-  //     handleSubmit,
-  //     formState: { errors },
-  //   } = useFormContext({
-  //     defaultValues: {
-  //       address: {
-  //         unitNo: "",
-  //         streetNo: "",
-  //         streetName: "",
-  //         suburb: "",
-  //         city: "",
-  //         state: "",
-  //         postCode: "",
-  //         country: "",
-  //       },
-  //     },
-  //     resolver: zodResolver(addressSchema),
-  //   });
+const schema = object({
+  firstName: string().nonempty("First name is required"),
+  lastName: string().nonempty("Last name is required"),
+  email: string().email("Invalid email address").nonempty("Email is required"),
+  mobile: string().nonempty("Mobile is required"),
+  address: object({
+    unitNumber: string().nullable(),
+    streetNumber: string().nullable(),
+    streetName: string().nullable(),
+    suburb: string().nonempty("Suburb is required"),
+    city: string().nullable(),
+    postCode: string().nullable(),
+  }),
+});
 
-  //   const {
-  //     register,
-  //     formState: { errors },
-  //   } = useFormContext();
+const AddressForm = () => {
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      mobile: "",
+      address: {
+        unitNumber: null,
+        streetNumber: null,
+        streetName: null,
+        suburb: "",
+        city: null,
+        postCode: null,
+      },
+    },
+    resolver: (data) => {
+      return schema.validate(data, { abortEarly: false });
+    },
+  });
 
-  console.log("register", register);
-  console.log("errors", errors);
+  const onSubmit = (data) => {
+    console.log(data);
+  };
 
-  //   const handleSave = (formValue) => {
-  //     console.log(formValue);
-  //     let {
-  //       unitNo,
-  //       streetNo,
-  //       streetName,
-  //       suburb,
-  //       city,
-  //       state,
-  //       postCode,
-  //       country,
-  //     } = formValue;
-  //     const singleLineAddress = `${unitNo}/${streetNo} ${streetName} ${suburb} ${city} ${state} ${postCode} ${country}`;
-  //     console.log(singleLineAddress);
-  //   };
   return (
-    // <form onSubmit={handleSubmit(handleSave)}>
-    <>
-      <Grid container spacing={3}>
-        <Grid item xs={3}>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="firstName"
+        control={control}
+        render={({ field }) => (
           <TextField
-            // type="number"
-            {...register("address.unitNo")}
-            label="Unit#"
-            fullWidth
-            autoComplete="Install unit number"
-            error={!!errors?.address?.unitNo}
-            helperText={errors?.address?.unitNo?.message ?? null}
+            {...field}
+            label="First Name"
+            error={!!errors.firstName}
+            helperText={errors?.firstName?.message}
           />
-        </Grid>
-        <Grid item xs={3}>
+        )}
+      />
+      <Controller
+        name="lastName"
+        control={control}
+        render={({ field }) => (
           <TextField
-            // type="number"
-            {...register("address.streetNo")}
-            label="Street#"
-            fullWidth
-            autoComplete="Install street number"
-            error={!!errors?.address?.streetNo}
-            helperText={errors?.address?.streetNo?.message ?? null}
+            {...field}
+            label="Last Name"
+            error={!!errors.lastName}
+            helperText={errors?.lastName?.message}
           />
-        </Grid>
-        <Grid item xs={3}>
+        )}
+      />
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => (
           <TextField
-            {...register("address.streetName")}
-            label="Street name"
-            fullWidth
-            autoComplete="Install street name"
-            error={!!errors?.address?.streetName}
-            helperText={errors?.address?.streetName?.message ?? null}
+            {...field}
+            label="Email"
+            error={!!errors.email}
+            helperText={errors?.email?.message}
           />
-        </Grid>
-        <Grid item xs={3}>
+        )}
+      />
+      <Controller
+        name="mobile"
+        control={control}
+        render={({ field }) => (
           <TextField
-            {...register("address.suburb", { required: true })}
+            {...field}
+            label="Mobile"
+            error={!!errors.mobile}
+            helperText={errors?.mobile?.message}
+          />
+        )}
+      />
+      <Controller
+        name="address.unitNumber"
+        control={control}
+        render={({ field }) => <TextField {...field} label="Unit Number" />}
+      />
+      <Controller
+        name="address.streetNumber"
+        control={control}
+        render={({ field }) => <TextField {...field} label="Street Number" />}
+      />
+      <Controller
+        name="address.streetName"
+        control={control}
+        render={({ field }) => <TextField {...field} label="Street Name" />}
+      />
+      <Controller
+        name="address.suburb"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
             label="Suburb"
-            fullWidth
-            autoComplete="Install suburb"
-            error={!!errors?.address?.suburb}
-            helperText={errors?.address?.suburb?.message ?? null}
+            error={!!errors.address?.suburb}
+            helperText={errors?.address?.suburb?.message}
           />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            {...register("address.city")}
-            label="City"
-            fullWidth
-            autoComplete="Install city"
-            error={!!errors?.address?.city}
-            helperText={errors?.address?.city?.message ?? null}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            {...register("address.state")}
-            label="State/Province/Region"
-            autoComplete="Install state"
-            fullWidth
-            error={!!errors?.address?.state}
-            helperText={errors?.address?.state?.message ?? null}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            // type="number"
-            {...register("address.postCode")}
-            label="Zip / Postal code"
-            fullWidth
-            autoComplete="Install postal-code"
-            error={!!errors?.address?.postCode}
-            helperText={errors?.address?.postCode?.message ?? null}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            {...register("address.country")}
-            label="Country"
-            fullWidth
-            autoComplete="Install country"
-            error={!!errors?.address?.country}
-            helperText={errors?.address?.country?.message ?? null}
-          />
-        </Grid>
-      </Grid>
-      <Button type="submit">save</Button>
-    </>
-
-    // </form>
+        )}
+      />
+      <Controller
+        name="address.city"
+        control={control}
+        render={({ field }) => <TextField {...field} label="City" />}
+      />
+      <Controller
+        name="address.postCode"
+        control={control}
+        render={({ field }) => <TextField {...field} label="Post Code" />}
+      />
+      <Button type="submit" variant="contained" color="primary">
+        Submit
+      </Button>
+    </form>
   );
-}
+};
 
 export default AddressForm;
