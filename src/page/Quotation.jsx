@@ -2,108 +2,19 @@ import React, { useState } from "react";
 import Typography from "@mui/material/Typography";
 import { StepLabel, Stepper, Step } from "@mui/material";
 import { Box, Button } from "@mui/material";
-import { useForm, FormProvider } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
+// import { useForm, FormProvider } from "react-hook-form";
+// import { useDispatch, useSelector } from "react-redux";
 
 import QuotationForm from "../component/quotation/QuotationForm";
 import DrawPad from "../component/quotation/DrawPad";
 import ReviewQuotation from "../component/quotation/ReviewQuotation";
 import { enum as zodEnum, number, object, string, boolean } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cacheOrder } from "../redux/slices/orderSlice";
-
-const schema = object({
-  fName: string()
-    .min(2, "Please enter a valid first name")
-    .max(32, "First name must be less than 100 characters"),
-  lName: string()
-    .min(2, "Please enter a valid first name")
-    .max(32, "First name must be less than 100 characters"),
-  email: string().email(),
-  mobile: string()
-    .startsWith("04", "Mobile number should start with '04'")
-    .min(10)
-    .max(14),
-  companyName: string().optional(),
-  ABN: string().optional(),
-  address: object({
-    unitNo: string().optional(),
-    streetNo: string().optional(),
-    streetName: string().optional(),
-    suburb: string().min(3, "Please enter a Suburb").optional(),
-    city: string().optional(),
-    state: string().optional(),
-    postCode: string().optional(),
-    country: string().optional(),
-  }).optional(),
-  isUpstairs: zodEnum(["yes", "no"]).optional(),
-  floors: string().optional(),
-  specialCondition: string().optional(),
-  supplier: zodEnum(["Lavi Stone", "B", "C", "D"]),
-});
+// import { cacheOrder } from "../redux/slices/orderSlice";
+import QuotationForms from "../component/quotation/QuotationForms";
 
 function Quotation() {
   const [activeStep, setActiveStep] = useState(0);
-  const dispatch = useDispatch();
-  const { order } = useSelector((state) => state.order);
-  console.log("order state", order);
-
-  const methods = useForm();
-
-  // const methods = useForm({
-  //   defaultValues: { ...order },
-  //   defaultValues: {
-  //     fName: "",
-  //     lName: "",
-  //     mobile: "",
-  //     email: "",
-  //     companyName: "",
-  //     ABN: "",
-  //     requestInstall: "",
-  //     address: {
-  //       unitNo: "",
-  //       streetNo: "",
-  //       streetName: "",
-  //       suburb: "",
-  //       city: "",
-  //       state: "",
-  //       postCode: "",
-  //       country: "",
-  //     },
-  //     isUpstairs: "",
-  //     floors: "",
-  //     specialCondition: "",
-  //     supplier: "Lavi Stone",
-  //   },
-  //   resolver: zodResolver(schema),
-  // });
-
-  //have previous values
-  // if (order.fName !== "") {
-  //   methods.setValue({
-  //     fName: order.fName,
-  //     lName: order.lName,
-  //     mobile: "",
-  //     email: "",
-  //     companyName: "",
-  //     ABN: "",
-  //     requestInstall: "",
-  //     address: {
-  //       unitNo: "",
-  //       streetNo: "",
-  //       streetName: "",
-  //       suburb: "",
-  //       city: "",
-  //       state: "",
-  //       postCode: "",
-  //       country: "",
-  //     },
-  //     isUpstairs: "",
-  //     floors: "",
-  //     specialCondition: "",
-  //     supplier: "Lavi Stone",
-  //   });
-  // }
 
   const handleNext = () => {
     console.log("next");
@@ -114,35 +25,20 @@ function Quotation() {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-  const onSubmit = (data) => {
-    console.log(12345, data);
-    dispatch(cacheOrder(data));
-    handleNext();
-  };
-
-  console.log(methods.formState.errors);
-
-  const getStepContent = (step, methods, onSubmit, handleBack, handleNext) => {
+  const getStepContent = (step, handleBack, handleNext) => {
     switch (step) {
       case 0:
         return (
-          <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)}>
-              <QuotationForm />
-              <ButtonSection
-                handleBack={handleBack}
-                handleNext={handleNext}
-                handleSaveForm={true}
-                activeStep={step}
-              />
-            </form>
-          </FormProvider>
+          <QuotationForms
+            handleBack={handleBack}
+            handleNext={handleNext}
+            activeStep={step}
+          />
         );
       case 1:
         return (
           <>
-            <DrawPad />
-            <ButtonSection
+            <DrawPad
               handleBack={handleBack}
               handleNext={handleNext}
               activeStep={step}
@@ -152,8 +48,7 @@ function Quotation() {
       case 2:
         return (
           <>
-            <ReviewQuotation />
-            <ButtonSection
+            <ReviewQuotation
               handleBack={handleBack}
               handleNext={handleNext}
               activeStep={step}
@@ -169,7 +64,7 @@ function Quotation() {
     <Box sx={{ margin: "0 20%" }}>
       <QuotationHeader />
       <QuotationStepper activeStep={activeStep} />
-      {getStepContent(activeStep, methods, onSubmit, handleBack, handleNext)}
+      {getStepContent(activeStep, handleBack, handleNext)}
     </Box>
   );
 }
