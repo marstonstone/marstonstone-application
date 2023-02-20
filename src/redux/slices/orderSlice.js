@@ -9,7 +9,7 @@ const initialState = {
     email: "",
     companyName: "",
     ABN: "",
-    requestInstall: "yes",
+
     address: {
       unitNo: "",
       streetNo: "",
@@ -20,7 +20,8 @@ const initialState = {
       postCode: "",
       country: "",
     },
-    isUpstairs: "no",
+    requestInstall: "yes",
+    isUpstairs: "yes",
     floors: "",
     specialCondition: "",
     supplier: "Lavi Stone",
