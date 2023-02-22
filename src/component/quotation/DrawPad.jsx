@@ -1,11 +1,11 @@
 import React from "react";
 import ButtonSection from "./ButtonSection";
-// import AddressForm from "./AddressForm";
+import DrawingPanel from "./DrawingPanel";
 
 function DrawPad({ handleNext, handleBack, activeStep }) {
   return (
     <>
-      {/* <AddressForm /> */}
+      <DrawingPanel />
       <ButtonSection
         handleBack={handleBack}
         handleNext={handleNext}
