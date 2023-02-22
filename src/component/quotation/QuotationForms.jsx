@@ -3,18 +3,13 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { Box, Button } from "@mui/material";
+import { Box } from "@mui/material";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
 import { toast } from "react-toastify";
-import {
-  useForm,
-  useController,
-  useFormContext,
-  Controller,
-} from "react-hook-form";
+import { useForm, useController } from "react-hook-form";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
@@ -73,10 +68,9 @@ function QuotationForms({ handleNext, handleBack, activeStep }) {
   const [requestInstall, setRequestInstall] = useState(
     order.requestInstall ?? "no"
   );
-  const requestInstallRef = useRef(null);
   const [isUpstairs, setIsUpstairs] = useState(order.isUpstairs ?? "no");
   const [supplier, setSupplier] = useState(order.supplier ?? "Lavi Stone");
-  // const { field: select } = useController({ name: "supplier", control });
+
   const { field } = useController({ name: "supplier", control });
 
   const supplierSet = ["Lavi Stone", "B", "C", "D"];
