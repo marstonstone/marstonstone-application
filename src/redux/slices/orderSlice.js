@@ -3,10 +3,10 @@ import internalApi from "../apis/internalApi";
 
 const initialState = {
   order: {
-    fName: "",
-    lName: "",
-    mobile: "",
-    email: "",
+    fName: "charles",
+    lName: "yeh",
+    mobile: "0422222222",
+    email: "charlesyehtw@gmail.com",
     companyName: "",
     ABN: "",
 
