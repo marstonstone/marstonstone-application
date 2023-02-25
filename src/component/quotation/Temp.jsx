@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Rect, Transformer, Image } from "react-konva";
 import { ImageList } from "./images/images";
 import useImage from "use-image";
+import Button from "@mui/material/Button";
+
 const moveItemToTop = (item) => {
   const selectedShape = item;
   selectedShape.moveToTop();
@@ -33,7 +35,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }) => {
             x: e.target.x(),
             y: e.target.y(),
           });
-          moveItemToTop(e.target);
+          //   moveItemToTop(e.target);
         }}
         onTransformEnd={(e) => {
           // transformer is changing scale of the node
@@ -73,40 +75,71 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }) => {
   );
 };
 
-const URLImage = ({ image, shapeProps, isSelected, onSelect, onChange }) => {
-  const [img] = useImage(image.src);
-  const [transform, setTransform] = useState({
-    x: image.x,
-    y: image.y,
-    scaleX: 1,
-    scaleY: 1,
-  });
-  const handleTransform = (event) => {
-    const node = event.target;
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-    console.log("999", event.target);
-    setTransform({
-      ...transform,
-      x: node.x(),
-      y: node.y(),
-      scaleX: scaleX,
-      scaleY: scaleY,
-    });
-  };
+const ImageItem = ({ imageProps, isSelected, onSelect, onChange }) => {
+  const [img] = useImage(imageProps.src);
+  const imgRef = React.useRef();
+  const trRef = React.useRef();
+
+  useEffect(() => {
+    if (isSelected) {
+      // we need to attach transformer manually
+      trRef.current.nodes([imgRef.current]);
+      trRef.current.getLayer().batchDraw();
+    }
+  }, [isSelected]);
+
   return (
-    <Image
-      image={img}
-      x={transform.x}
-      y={transform.y}
-      scaleX={transform.scaleX}
-      scaleY={transform.scaleY}
-      offsetX={img ? img.width / 2 : 0}
-      offsetY={img ? img.height / 2 : 0}
-      draggable
-      transformable
-      onTransformEnd={handleTransform}
-    />
+    <React.Fragment>
+      <Image
+        image={img}
+        onClick={onSelect}
+        onTap={onSelect}
+        ref={imgRef}
+        {...imageProps}
+        draggable
+        onDragEnd={(e) => {
+          onChange({
+            ...imageProps,
+            x: e.target.x(),
+            y: e.target.y(),
+          });
+          moveItemToTop(e.target);
+        }}
+        onTransformEnd={(e) => {
+          // transformer is changing scale of the node
+          // and NOT its width or height
+          // but in the store we have only width and height
+          // to match the data better we will reset scale on transform end
+          const node = imgRef.current;
+          const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+
+          // we will reset it back
+          node.scaleX(1);
+          node.scaleY(1);
+          onChange({
+            ...imageProps,
+            x: node.x(),
+            y: node.y(),
+            // set minimal value
+            width: Math.max(5, node.width() * scaleX),
+            height: Math.max(node.height() * scaleY),
+          });
+        }}
+      />
+      {isSelected && (
+        <Transformer
+          ref={trRef}
+          boundBoxFunc={(oldBox, newBox) => {
+            // limit resize
+            if (newBox.width < 5 || newBox.height < 5) {
+              return oldBox;
+            }
+            return newBox;
+          }}
+        />
+      )}
+    </React.Fragment>
   );
 };
 
@@ -116,7 +149,7 @@ const initialRectangles = [
     y: 10,
     width: 100,
     height: 100,
-    fill: "red",
+    fill: "#D9CAB3",
     id: "rect1",
   },
   {
@@ -124,7 +157,7 @@ const initialRectangles = [
     y: 150,
     width: 100,
     height: 100,
-    fill: "green",
+    fill: "#6D9886",
     id: "rect2",
   },
 ];
@@ -136,7 +169,7 @@ const Temp = () => {
   const stageRef = useRef();
   const [rects, setRects] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [itemNo, setItemNo] = useState(0);
+  const [itemNo, setItemNo] = useState(1);
 
   const checkDeselect = (e) => {
     // deselect when clicked on empty area
@@ -146,14 +179,77 @@ const Temp = () => {
     }
   };
 
-  const handleShapeSelect = (e) => {
+  const handleItemSelect = (e) => {
     moveItemToTop(e.target);
-    // const selectedShape = e.target;
-    // selectedShape.moveToTop();
-    // selectedShape.getLayer().batchDraw();
     const itemId = e.target.id();
     console.log("selectedId", itemId);
     selectShape(itemId);
+  };
+
+  const handleStoneSelect = (e) => {
+    //    moveItemToTop(e.target);
+    const itemId = e.target.id();
+    console.log("selectedId", itemId);
+    selectShape(itemId);
+  };
+
+  //delete single item in key down
+  useEffect(() => {
+    const handleDelete = (event) => {
+      console.log(event.key);
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedId) {
+        console.log(images.filter((image) => image.id !== selectedId));
+        console.log(rects.filter((rect) => rect.id !== selectedId));
+        setImages((prev) => prev.filter((image) => image.id !== selectedId));
+        setRects((prev) => prev.filter((rect) => rect.id !== selectedId));
+        selectShape(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleDelete);
+    return () => {
+      window.removeEventListener("keydown", handleDelete);
+    };
+  }, [selectedId]);
+
+  //clear the stage
+  const handleClear = (item) => {
+    setImages([]);
+    setRects([]);
+  };
+
+  const handleOnDrop = (e) => {
+    e.preventDefault();
+    // get current point position and set item placement point
+    stageRef.current.setPointersPositions(e);
+    const x = stageRef.current.getPointerPosition(e).x - isDragging.width / 2;
+    const y = stageRef.current.getPointerPosition(e).y - isDragging.height / 2;
+    console.log(x, y);
+    // add image
+    if (isDragging.type === "image") {
+      setImages(
+        images.concat([
+          {
+            x,
+            y,
+            ...isDragging,
+          },
+        ])
+      );
+      setItemNo((prev) => prev + 1);
+    } else {
+      console.log("drag rect in stage");
+      setRects(
+        rects.concat([
+          {
+            ...isDragging,
+            x,
+            y,
+          },
+        ])
+      );
+      setItemNo((prev) => prev + 1);
+    }
   };
 
   useEffect(() => {
@@ -172,6 +268,7 @@ const Temp = () => {
 
   return (
     <div>
+      <Button onClick={handleClear}>Clear</Button>
       {ImageList.map((img) => {
         return (
           <img
@@ -209,45 +306,13 @@ const Temp = () => {
                 (rec) => rec.id === rectItem.id
               );
               rectTemp.id = itemNo;
-              console.log(rectTemp);
               setIsDragging(rectTemp);
             }}
           />
         );
       })}
       <div
-        onDrop={(e) => {
-          e.preventDefault();
-          console.log(e);
-          // register event position
-          stageRef.current.setPointersPositions(e);
-          // add image
-          if (isDragging.type === "image") {
-            console.log({ ...stageRef.current.getPointerPosition() });
-
-            setImages(
-              images.concat([
-                {
-                  ...stageRef.current.getPointerPosition(),
-                  ...isDragging,
-                },
-              ])
-            );
-            setItemNo((prev) => prev + 1);
-          } else {
-            console.log("drag rect in stage");
-            setRects(
-              rects.concat([
-                {
-                  ...isDragging,
-                  x: stageRef.current.getPointerPosition().x,
-                  y: stageRef.current.getPointerPosition().y,
-                },
-              ])
-            );
-            setItemNo((prev) => prev + 1);
-          }
-        }}
+        onDrop={handleOnDrop}
         onDragOver={(e) => {
           e.preventDefault();
         }}
@@ -267,7 +332,7 @@ const Temp = () => {
                   key={i}
                   shapeProps={rect}
                   isSelected={rect.id === selectedId}
-                  onSelect={handleShapeSelect}
+                  onSelect={handleStoneSelect}
                   onChange={(newAttrs) => {
                     const rectTemp = rects.slice();
                     rectTemp[i] = newAttrs;
@@ -275,7 +340,7 @@ const Temp = () => {
                   }}
                   onDragStart={(e) => {
                     let rectTemp = rects.find((rec) => rec.id === rect.id);
-                    console.log(rectTemp);
+
                     setIsDragging(rectTemp);
                   }}
                 />
@@ -283,18 +348,19 @@ const Temp = () => {
             })}
             {images.map((image, i) => {
               return (
-                <URLImage
+                <ImageItem
                   key={i}
-                  image={image}
-                  shapeProps={image}
+                  imageProps={image}
                   isSelected={image.id === selectedId}
-                  onSelect={() => {
-                    selectShape(image.id);
-                  }}
+                  onSelect={handleItemSelect}
                   onChange={(newAttrs) => {
-                    const imgTemp = images.slice();
-                    imgTemp[i] = newAttrs;
-                    setImages(imgTemp);
+                    const imageTemp = images.slice();
+                    imageTemp[i] = newAttrs;
+                    setImages(imageTemp);
+                  }}
+                  onDragStart={(e) => {
+                    let imageTemp = images.find((img) => img.id === image.id);
+                    setIsDragging(imageTemp);
                   }}
                 />
               );
