@@ -1,39 +1,55 @@
 import React, { useState } from "react";
 import { Grid, Button, TextField, Typography } from "@mui/material";
+import SelectedServicesList from "./SelectedServicesList";
 
-function ToolBar({ item, onChange }) {
+function ToolBar({ item, handleChange }) {
   console.log(item);
+  const [udpateData, setUpdateData] = useState({});
+  //   console.log(onChange(item));
+  const handleInstallOptions = (selectedOptions) => {
+    let updatedItem = { ...item, options: [...selectedOptions] };
+    handleChange(updatedItem);
+  };
+
   return (
     <div>
-      <Grid container spacing={2}>
+      <Grid container spacing={2} mt={3}>
+        <Typography>Width:</Typography>
         <Grid item xs={2}>
           <TextField
             value={item?.width ?? ""}
             type="number"
             label="width"
             onChange={(e) => {
-              onChange();
+              handleChange({ ...item, width: +e.target.value });
             }}
             // InputLabelProps={{ shrink: true }}
           />
         </Grid>
+        <Typography>Height:</Typography>
         <Grid item xs={2}>
           <TextField
             value={item?.height ?? ""}
             type="number"
             label="height"
             onChange={(e) => {
-              onChange();
+              handleChange({ ...item, height: +e.target.value });
             }}
           />
         </Grid>
-        <Grid item xs={2}>
+        <Grid item xs={6}>
+          <Typography>Install Options :</Typography>
+          <SelectedServicesList
+            item={item}
+            handleInstallOptions={handleInstallOptions}
+          />
+        </Grid>
+        {/* <Grid item xs={2}>
           <TextField
             value={item?.um ?? ""}
-            type="number"
             label="Under Mounted:"
             onChange={(e) => {
-              onChange();
+              handleChange({ ...item, um: e.target.value });
             }}
           />
         </Grid>
@@ -41,10 +57,9 @@ function ToolBar({ item, onChange }) {
           {" "}
           <TextField
             value={item?.wf ?? ""}
-            type="number"
             label="Waterfall"
             onChange={(e) => {
-              onChange();
+              handleChange({ ...item, wf: e.target.value });
             }}
           />
         </Grid>
@@ -52,10 +67,9 @@ function ToolBar({ item, onChange }) {
           {" "}
           <TextField
             value={item?.fm ?? ""}
-            type="number"
             label="Flush Mounted"
             onChange={(e) => {
-              onChange();
+              handleChange();
             }}
           />
         </Grid>
@@ -63,15 +77,15 @@ function ToolBar({ item, onChange }) {
           {" "}
           <TextField
             value={item?.sp ?? ""}
-            type="number"
             label="Splash Back"
             onChange={(e) => {
-              onChange();
+              handleChange({ ...item, sp: e.target.value });
             }}
           />
         </Grid>
-        <Grid item xs={2}></Grid>
+        <Grid item xs={2}></Grid> */}
       </Grid>
+
       {/* <Typography>Width:</Typography> */}
 
       {/* <Typography>Height:</Typography> */}

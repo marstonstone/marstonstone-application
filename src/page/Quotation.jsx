@@ -15,7 +15,7 @@ import QuotationForm from "../component/quotation/QuotationForm";
 
 function Quotation() {
   const [activeStep, setActiveStep] = useState(0);
-  const [boxWidth, setBoxWidth] = useState(1300);
+  const [boxWidth, setBoxWidth] = useState(1000);
 
   const handleNext = () => {
     console.log("next");
@@ -40,14 +40,14 @@ function Quotation() {
         );
       case 1:
         return (
-          <>
+          <Box ml={20} mr={20}>
             <DrawPad
               handleBack={handleBack}
               handleNext={handleNext}
               activeStep={step}
               boxWidth={boxWidth}
             />
-          </>
+          </Box>
         );
       case 2:
         return (

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Rect, Transformer, Image, Text } from "react-konva";
 import { ImageList } from "./images/images";
 import useImage from "use-image";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Grid } from "@mui/material";
 import ToolBar from "./ToolBar";
 
 const moveItemToTop = (item) => {
@@ -87,8 +87,8 @@ const Rectangle = ({
             x: node.x(),
             y: node.y(),
             // set minimal value
-            width: Math.max(5, node.width() * scaleX).toFixed(0),
-            height: Math.max(node.height() * scaleY).toFixed(0),
+            width: +Math.max(5, node.width() * scaleX).toFixed(0),
+            height: +Math.max(node.height() * scaleY).toFixed(0),
           });
         }}
       />
@@ -98,7 +98,6 @@ const Rectangle = ({
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
-
               setCurrentWidth(newBox.width.toFixed(0));
               setCurrentHeight(newBox.height.toFixed(0));
               setSelectedItem((prev) => ({
@@ -182,8 +181,8 @@ const ImageItem = ({
             x: node.x(),
             y: node.y(),
             // set minimal value
-            width: Math.max(5, node.width() * scaleX).toFixed(0),
-            height: Math.max(node.height() * scaleY).toFixed(0),
+            width: +Math.max(5, node.width() * scaleX).toFixed(0),
+            height: +Math.max(node.height() * scaleY).toFixed(0),
           });
         }}
       />
@@ -329,7 +328,27 @@ const DrawingPanel = ({ boxWidth }) => {
     }
   };
 
-  const handleUpdateItem = (e) => {};
+  const handleUpdateItem = (updatedItem) => {
+    console.log(updatedItem);
+    if (updatedItem?.type === "image") {
+      const updatedItems = images.map((img) => {
+        if (img.id === updatedItem.id) {
+          return { ...updatedItem };
+        }
+        return img;
+      });
+      setImages(updatedItems);
+    } else {
+      const updatedItems = rects.map((rect) => {
+        if (rect.id === updatedItem.id) {
+          return { ...updatedItem };
+        }
+        return rect;
+      });
+
+      setRects(updatedItems);
+    }
+  };
 
   useEffect(() => {
     console.log("images", images);
@@ -350,123 +369,138 @@ const DrawingPanel = ({ boxWidth }) => {
   return (
     <div>
       <Button onClick={handleClear}>Clear</Button>
-      <TextField
-        value={maxWidth}
-        type="number"
-        label="Maximum width"
-        fullWidth
-        helperText="please enter the maximum length of you project"
-        onChange={(e) => {
-          setMaxWidth(e.target.value);
-        }}
-      />
-      <ToolBar item={selectedItem} onChange={handleUpdateItem} />
-      {ImageList.map((img) => {
-        return (
-          <img
-            key={img.id}
-            id={img.id}
-            alt="lion"
-            src={img.src}
-            draggable="true"
-            onDragStart={(e) => {
-              let imgTemp = {
-                type: "image",
-                id: itemNo,
-                src: e.target.src,
-                width: e.target.width,
-                height: e.target.height,
-              };
-              setIsDragging(imgTemp);
+      <Grid container>
+        <Grid item xs={12}>
+          <TextField
+            value={maxWidth}
+            type="number"
+            label="Maximum width"
+            fullWidth
+            helperText="please enter the maximum length of you project"
+            onChange={(e) => {
+              setMaxWidth(e.target.value);
             }}
           />
-        );
-      })}
-      {rectangleList.map((rectItem) => {
-        return (
+        </Grid>
+        <Grid item xs={12}>
+          <ToolBar item={selectedItem} handleChange={handleUpdateItem} />
+        </Grid>
+        <Grid item xs={2}>
+          {ImageList.map((img) => {
+            return (
+              <img
+                key={img.id}
+                id={img.id}
+                alt="lion"
+                src={img.src}
+                draggable="true"
+                onDragStart={(e) => {
+                  let imgTemp = {
+                    type: "image",
+                    id: itemNo,
+                    src: e.target.src,
+                    width: e.target.width,
+                    height: e.target.height,
+                  };
+                  setIsDragging(imgTemp);
+                }}
+              />
+            );
+          })}
+          {rectangleList.map((rectItem) => {
+            return (
+              <div
+                style={{
+                  width: rectItem.width,
+                  height: rectItem.height,
+                  backgroundColor: rectItem.fill,
+                  cursor: "move",
+                }}
+                data-shape-type="rect"
+                draggable="true"
+                onDragStart={(e) => {
+                  let rectTemp = rectangleList.find(
+                    (rec) => rec.id === rectItem.id
+                  );
+                  rectTemp.id = itemNo;
+                  setIsDragging(rectTemp);
+                }}
+              />
+            );
+          })}
+        </Grid>
+        <Grid item xs={10}>
+          {" "}
           <div
-            style={{
-              width: rectItem.width,
-              height: rectItem.height,
-              backgroundColor: rectItem.fill,
-              cursor: "move",
+            onDrop={handleOnDrop}
+            onDragOver={(e) => {
+              e.preventDefault();
             }}
-            data-shape-type="rect"
-            draggable="true"
-            onDragStart={(e) => {
-              let rectTemp = rectangleList.find(
-                (rec) => rec.id === rectItem.id
-              );
-              rectTemp.id = itemNo;
-              setIsDragging(rectTemp);
-            }}
-          />
-        );
-      })}
-      <div
-        onDrop={handleOnDrop}
-        onDragOver={(e) => {
-          e.preventDefault();
-        }}
-      >
-        <Stage
-          width={boxWidth}
-          height={window.innerHeight}
-          ref={stageRef}
-          onMouseDown={checkDeselect}
-          onTouchStart={checkDeselect}
-          style={{ border: "1px solid grey" }}
-        >
-          <Layer>
-            {rects.map((rect, i) => {
-              return (
-                <>
-                  <Rectangle
-                    key={i}
-                    shapeProps={rect}
-                    isSelected={rect.id === selectedItem?.id}
-                    onSelect={(e) => handleStoneSelect(e, rect)}
-                    setSelectedItem={setSelectedItem}
-                    onChange={(newAttrs) => {
-                      console.log("onchange newAttrs", newAttrs);
-                      const rectTemp = rects.slice();
-                      rectTemp[i] = newAttrs;
-                      setRects(rectTemp);
-                    }}
-                    onDragStart={(e) => {
-                      let rectTemp = rects.find((rec) => rec.id === rect.id);
+          >
+            <Stage
+              width={boxWidth}
+              height={window.innerHeight}
+              ref={stageRef}
+              onMouseDown={checkDeselect}
+              onTouchStart={checkDeselect}
+              style={{ border: "1px solid grey" }}
+            >
+              <Layer>
+                {rects.map((rect, i) => {
+                  return (
+                    <>
+                      <Rectangle
+                        key={i}
+                        shapeProps={rect}
+                        isSelected={rect.id === selectedItem?.id}
+                        onSelect={(e) => handleStoneSelect(e, rect)}
+                        setSelectedItem={setSelectedItem}
+                        onChange={(newAttrs) => {
+                          console.log("onchange newAttrs", newAttrs);
+                          const rectTemp = rects.slice();
+                          rectTemp[i] = newAttrs;
+                          setRects(rectTemp);
+                        }}
+                        onDragStart={(e) => {
+                          let rectTemp = rects.find(
+                            (rec) => rec.id === rect.id
+                          );
 
-                      setIsDragging(rectTemp);
-                    }}
-                    ratio={getRatioForItem(+maxWidth)}
-                  />
-                </>
-              );
-            })}
-            {images.map((image, i) => {
-              return (
-                <ImageItem
-                  key={i}
-                  imageProps={image}
-                  isSelected={image.id === selectedItem?.id}
-                  setSelectedItem={setSelectedItem}
-                  onSelect={(e) => handleImageSelect(e, image)}
-                  onChange={(newAttrs) => {
-                    const imageTemp = images.slice();
-                    imageTemp[i] = newAttrs;
-                    setImages(imageTemp);
-                  }}
-                  onDragStart={(e) => {
-                    let imageTemp = images.find((img) => img.id === image.id);
-                    setIsDragging(imageTemp);
-                  }}
-                  ratio={getRatioForItem(+maxWidth)}
-                />
-              );
-            })}
-          </Layer>
-        </Stage>
-      </div>
+                          setIsDragging(rectTemp);
+                        }}
+                        ratio={getRatioForItem(+maxWidth)}
+                      />
+                    </>
+                  );
+                })}
+                {images.map((image, i) => {
+                  return (
+                    <ImageItem
+                      key={i}
+                      imageProps={image}
+                      isSelected={image.id === selectedItem?.id}
+                      setSelectedItem={setSelectedItem}
+                      onSelect={(e) => handleImageSelect(e, image)}
+                      onChange={(newAttrs) => {
+                        const imageTemp = images.slice();
+                        imageTemp[i] = newAttrs;
+                        setImages(imageTemp);
+                      }}
+                      onDragStart={(e) => {
+                        let imageTemp = images.find(
+                          (img) => img.id === image.id
+                        );
+                        setIsDragging(imageTemp);
+                      }}
+                      ratio={getRatioForItem(+maxWidth)}
+                    />
+                  );
+                })}
+              </Layer>
+            </Stage>
+          </div>
+        </Grid>
+      </Grid>
     </div>
   );
 };
