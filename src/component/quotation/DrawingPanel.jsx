@@ -1,10 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Stage, Layer, Rect, Transformer, Image, Text } from "react-konva";
 import { ImageList } from "./images/images";
 import useImage from "use-image";
-import { Button, TextField, Grid } from "@mui/material";
-import ToolBar from "./ToolBar";
-
+import {
+  Button,
+  TextField,
+  Grid,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  Divider,
+} from "@mui/material";
+import CanvasToolbar from "./CanvasToolbar";
+import { Box } from "@mui/system";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 const moveItemToTop = (item) => {
   const selectedShape = item;
   selectedShape.moveToTop();
@@ -102,8 +112,8 @@ const Rectangle = ({
               setCurrentHeight(newBox.height.toFixed(0));
               setSelectedItem((prev) => ({
                 ...prev,
-                width: newBox.width.toFixed(0),
-                height: newBox.height.toFixed(0),
+                width: +newBox.width.toFixed(0),
+                height: +newBox.height.toFixed(0),
               }));
 
               if (newBox.width < 5 || newBox.height < 5) {
@@ -196,8 +206,8 @@ const ImageItem = ({
               setCurrentHeight(newBox.height.toFixed(0));
               setSelectedItem((prev) => ({
                 ...prev,
-                width: newBox.width.toFixed(0),
-                height: newBox.height.toFixed(0),
+                width: +newBox.width.toFixed(0),
+                height: +newBox.height.toFixed(0),
               }));
               if (newBox.width < 5 || newBox.height < 5) {
                 return oldBox;
@@ -244,7 +254,7 @@ const DrawingPanel = ({ boxWidth }) => {
   const stageRef = useRef();
   const [rects, setRects] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [itemNo, setItemNo] = useState(1);
+  const [itemNo, setItemNo] = useState("1");
   const [maxWidth, setMaxWidth] = useState(null);
 
   const checkDeselect = (e) => {
@@ -302,6 +312,7 @@ const DrawingPanel = ({ boxWidth }) => {
     stageRef.current.setPointersPositions(e);
     const x = stageRef.current.getPointerPosition(e).x - isDragging.width / 2;
     const y = stageRef.current.getPointerPosition(e).y - isDragging.height / 2;
+    console.log(isDragging);
     // add image
     if (isDragging.type === "image") {
       setImages(
@@ -313,7 +324,7 @@ const DrawingPanel = ({ boxWidth }) => {
           },
         ])
       );
-      setItemNo((prev) => prev + 1);
+      setItemNo((prev) => (+prev + 1).toString());
     } else {
       setRects(
         rects.concat([
@@ -324,7 +335,7 @@ const DrawingPanel = ({ boxWidth }) => {
           },
         ])
       );
-      setItemNo((prev) => prev + 1);
+      setItemNo((prev) => (+prev + 1).toString());
     }
   };
 
@@ -366,27 +377,42 @@ const DrawingPanel = ({ boxWidth }) => {
     console.log("maxWidth", maxWidth);
   }, [maxWidth]);
 
+  const memoisedToolbar = useMemo(() => {
+    if (!selectedItem) return;
+    return (
+      <CanvasToolbar item={selectedItem} handleChange={handleUpdateItem} />
+    );
+  }, [selectedItem]);
+
   return (
     <div>
-      <Button onClick={handleClear}>Clear</Button>
-      <Grid container>
-        <Grid item xs={12}>
-          <TextField
-            value={maxWidth}
-            type="number"
-            label="Maximum width"
-            fullWidth
-            helperText="please enter the maximum length of you project"
-            onChange={(e) => {
-              setMaxWidth(e.target.value);
-            }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <ToolBar item={selectedItem} handleChange={handleUpdateItem} />
-        </Grid>
+      <TextField
+        value={maxWidth}
+        type="number"
+        label="Maximum width"
+        fullWidth
+        helperText="please enter the maximum length of you project"
+        onChange={(e) => {
+          setMaxWidth(e.target.value);
+        }}
+      />
+
+      <Divider style={{ margin: "20px" }}>Canvas</Divider>
+      <Button onClick={handleClear} variant="contained">
+        Clear
+      </Button>
+      {/* Start Canvas */}
+      <Grid container mt={2}>
         <Grid item xs={2}>
-          {ImageList.map((img) => {
+          {
+            <ResourcesSection
+              ImageList={ImageList}
+              rectangleList={rectangleList}
+              itemNo={itemNo}
+              setIsDragging={setIsDragging}
+            />
+          }
+          {/* {ImageList.map((img) => {
             return (
               <img
                 key={img.id}
@@ -427,81 +453,193 @@ const DrawingPanel = ({ boxWidth }) => {
                 }}
               />
             );
-          })}
+          })} */}
         </Grid>
         <Grid item xs={10}>
-          {" "}
-          <div
-            onDrop={handleOnDrop}
-            onDragOver={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <Stage
-              width={boxWidth}
-              height={window.innerHeight}
-              ref={stageRef}
-              onMouseDown={checkDeselect}
-              onTouchStart={checkDeselect}
-              style={{ border: "1px solid grey" }}
+          <>
+            {/* canvasToolbar */}
+            {memoisedToolbar}
+            <div
+              onDrop={handleOnDrop}
+              onDragOver={(e) => {
+                e.preventDefault();
+              }}
             >
-              <Layer>
-                {rects.map((rect, i) => {
-                  return (
-                    <>
-                      <Rectangle
+              <Stage
+                width={boxWidth}
+                height={window.innerHeight}
+                ref={stageRef}
+                onMouseDown={checkDeselect}
+                onTouchStart={checkDeselect}
+                style={{ border: "1px solid grey" }}
+              >
+                <Layer>
+                  {rects.map((rect, i) => {
+                    return (
+                      <>
+                        <Rectangle
+                          key={i}
+                          shapeProps={rect}
+                          isSelected={rect.id === selectedItem?.id}
+                          onSelect={(e) => handleStoneSelect(e, rect)}
+                          setSelectedItem={setSelectedItem}
+                          onChange={(newAttrs) => {
+                            console.log("onchange newAttrs", newAttrs);
+                            const rectTemp = rects.slice();
+                            rectTemp[i] = newAttrs;
+                            setRects(rectTemp);
+                          }}
+                          onDragStart={(e) => {
+                            let rectTemp = rects.find(
+                              (rec) => rec.id === rect.id
+                            );
+
+                            setIsDragging(rectTemp);
+                          }}
+                          ratio={getRatioForItem(+maxWidth)}
+                        />
+                      </>
+                    );
+                  })}
+                  {images.map((image, i) => {
+                    return (
+                      <ImageItem
                         key={i}
-                        shapeProps={rect}
-                        isSelected={rect.id === selectedItem?.id}
-                        onSelect={(e) => handleStoneSelect(e, rect)}
+                        imageProps={image}
+                        isSelected={image.id === selectedItem?.id}
                         setSelectedItem={setSelectedItem}
+                        onSelect={(e) => handleImageSelect(e, image)}
                         onChange={(newAttrs) => {
-                          console.log("onchange newAttrs", newAttrs);
-                          const rectTemp = rects.slice();
-                          rectTemp[i] = newAttrs;
-                          setRects(rectTemp);
+                          const imageTemp = images.slice();
+                          imageTemp[i] = newAttrs;
+                          setImages(imageTemp);
                         }}
                         onDragStart={(e) => {
-                          let rectTemp = rects.find(
-                            (rec) => rec.id === rect.id
+                          let imageTemp = images.find(
+                            (img) => img.id === image.id
                           );
-
-                          setIsDragging(rectTemp);
+                          setIsDragging(imageTemp);
                         }}
                         ratio={getRatioForItem(+maxWidth)}
                       />
-                    </>
-                  );
-                })}
-                {images.map((image, i) => {
-                  return (
-                    <ImageItem
-                      key={i}
-                      imageProps={image}
-                      isSelected={image.id === selectedItem?.id}
-                      setSelectedItem={setSelectedItem}
-                      onSelect={(e) => handleImageSelect(e, image)}
-                      onChange={(newAttrs) => {
-                        const imageTemp = images.slice();
-                        imageTemp[i] = newAttrs;
-                        setImages(imageTemp);
-                      }}
-                      onDragStart={(e) => {
-                        let imageTemp = images.find(
-                          (img) => img.id === image.id
-                        );
-                        setIsDragging(imageTemp);
-                      }}
-                      ratio={getRatioForItem(+maxWidth)}
-                    />
-                  );
-                })}
-              </Layer>
-            </Stage>
-          </div>
+                    );
+                  })}
+                </Layer>
+              </Stage>
+            </div>
+          </>
         </Grid>
       </Grid>
     </div>
+  );
+};
+
+const ResourcesSection = ({
+  ImageList,
+  rectangleList,
+  itemNo,
+  setIsDragging,
+}) => {
+  return (
+    <Box mr={3}>
+      <Accordion defaultExpanded={true}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1a-content"
+          id="panel1a-header"
+        >
+          <Typography>Objects</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box>
+            <Grid container spacing={2}>
+              {ImageList.map((img) => (
+                <Grid item xs={6}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      paddingTop: "100%",
+                      position: "relative",
+                    }}
+                  >
+                    <img
+                      key={img.id}
+                      id={img.id}
+                      src={img.src}
+                      draggable="true"
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                      }}
+                      onDragStart={(e) => {
+                        let imgTemp = {
+                          type: "image",
+                          id: itemNo,
+                          src: e.target.src,
+                          width: e.target.naturalWidth,
+                          height: e.target.naturalHeight,
+                        };
+                        setIsDragging(imgTemp);
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+      <Accordion defaultExpanded={true}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel2a-content"
+          id="panel2a-header"
+        >
+          <Typography>Shapes</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box>
+            <Grid container spacing={2}>
+              {rectangleList.map((rectItem) => (
+                <Grid item xs={6}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      paddingTop: "100%",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: rectItem.fill,
+                        cursor: "move",
+                      }}
+                      data-shape-type="rect"
+                      draggable="true"
+                      onDragStart={(e) => {
+                        let rectTemp = rectangleList.find(
+                          (rec) => rec.id === rectItem.id
+                        );
+                        rectTemp.id = itemNo;
+                        setIsDragging(rectTemp);
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    </Box>
   );
 };
 
