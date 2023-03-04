@@ -9,34 +9,29 @@ import {
   ListItemIcon,
   ListItemText,
   MenuItem,
-} from "@mui/material";
-import { padding } from "@mui/system";
-import React, { useState, useEffect, useMemo } from "react";
+} from '@mui/material';
+import React, { useState, useEffect } from 'react';
 
 const installOptions = [
-  { label: "Under Mounted", value: "um" },
-  { label: "Waterfall", value: "wf" },
-  { label: "Flush Mounted", value: "fm" },
-  { label: "Splash Back", value: "sp" },
+  { label: 'Under Mounted', value: 'um' },
+  { label: 'Waterfall', value: 'wf' },
+  { label: 'Flush Mounted', value: 'fm' },
+  { label: 'Splash Back', value: 'sp' },
 ];
 
-const materialOptions = ["A", "B", "C", "D"];
+const materialOptions = ['A', 'B', 'C', 'D'];
 
-function CanvasToolbar({ item, handleChange }) {
+function CanvasToolbar({ item, handleChange, setIsFocused }) {
   const [selectedOptions, setSelectedOptions] = useState(item?.options ?? []);
-  const [selectedMaterial, setSelectedMaterial] = useState("A");
-  const isAllSelected =
-    installOptions.length > 0 &&
-    selectedOptions?.length === installOptions.length;
+  const [selectedMaterial, setSelectedMaterial] = useState('A');
+  const isAllSelected = installOptions.length > 0 && selectedOptions?.length === installOptions.length;
 
   const handleMultiSelectChange = (event) => {
     const value = event.target.value;
 
-    if (value[value.length - 1] === "all") {
+    if (value[value.length - 1] === 'all') {
       const updatedSelectedOption =
-        selectedOptions?.length === installOptions?.length
-          ? []
-          : installOptions.map((item) => item.value);
+        selectedOptions?.length === installOptions?.length ? [] : installOptions.map((item) => item.value);
 
       setSelectedOptions(updatedSelectedOption);
 
@@ -58,39 +53,38 @@ function CanvasToolbar({ item, handleChange }) {
 
   useEffect(() => {
     setSelectedOptions(item?.options ?? []);
-    setSelectedMaterial(item?.material ?? "A");
+    setSelectedMaterial(item?.material ?? 'A');
   }, [item]);
 
   return (
     <Toolbar style={{ paddingLeft: 0 }}>
       <TextField
-        value={item?.width ?? "0"}
+        value={item?.width ?? '0'}
         type="number"
         label="width"
         onChange={(e) => {
           handleChange({ ...item, width: +e.target.value });
         }}
         InputLabelProps={{ shrink: true }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         sx={{ mr: 1 }}
       />
       <TextField
-        value={item?.height ?? "0"}
+        value={item?.height ?? '0'}
         type="number"
         label="height"
         onChange={(e) => {
           handleChange({ ...item, height: +e.target.value });
         }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         InputLabelProps={{ shrink: true }}
         sx={{ mr: 1 }}
       />
       <FormControl variant="outlined" size="small">
         <InputLabel>Material</InputLabel>
-        <Select
-          label="Material"
-          value={selectedMaterial}
-          onChange={handleMaterialChange}
-          sx={{ mr: 1 }}
-        >
+        <Select label="Material" value={selectedMaterial} onChange={handleMaterialChange} sx={{ mr: 1 }}>
           {materialOptions.map((option) => (
             <MenuItem key={option} value={option}>
               <ListItemText primary={option} />
@@ -117,15 +111,13 @@ const MultiSelect = ({ selected, handleMultiSelectChange, isAllSelected }) => {
         multiple
         value={selected}
         onChange={handleMultiSelectChange}
-        renderValue={(selected) => selected.join(", ")}
+        renderValue={(selected) => selected.join(', ')}
       >
         <MenuItem value="all">
           <ListItemIcon>
             <Checkbox
               checked={isAllSelected}
-              indeterminate={
-                selected?.length > 0 && selected?.length < installOptions.length
-              }
+              indeterminate={selected?.length > 0 && selected?.length < installOptions.length}
             />
           </ListItemIcon>
           <ListItemText primary="Select All" />
