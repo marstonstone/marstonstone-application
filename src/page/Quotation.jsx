@@ -5,16 +5,17 @@ import { Box, Button } from "@mui/material";
 // import { useForm, FormProvider } from "react-hook-form";
 // import { useDispatch, useSelector } from "react-redux";
 
-import QuotationForm from "../component/quotation/QuotationForm";
 import DrawPad from "../component/quotation/DrawPad";
 import ReviewQuotation from "../component/quotation/ReviewQuotation";
 import { enum as zodEnum, number, object, string, boolean } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 // import { cacheOrder } from "../redux/slices/orderSlice";
-import QuotationForms from "../component/quotation/QuotationForms";
+import QuotationForm from "../component/quotation/QuotationForm";
+// import QuotationForm from "../component/quotation/QuotationForm";
 
 function Quotation() {
   const [activeStep, setActiveStep] = useState(0);
+  const [boxWidth, setBoxWidth] = useState(1000);
 
   const handleNext = () => {
     console.log("next");
@@ -29,31 +30,34 @@ function Quotation() {
     switch (step) {
       case 0:
         return (
-          <QuotationForms
-            handleBack={handleBack}
-            handleNext={handleNext}
-            activeStep={step}
-          />
-        );
-      case 1:
-        return (
-          <>
-            <DrawPad
+          <Box ml={20} mr={20}>
+            <QuotationForm
               handleBack={handleBack}
               handleNext={handleNext}
               activeStep={step}
             />
-          </>
+          </Box>
+        );
+      case 1:
+        return (
+          <Box ml={20} mr={20}>
+            <DrawPad
+              handleBack={handleBack}
+              handleNext={handleNext}
+              activeStep={step}
+              boxWidth={boxWidth}
+            />
+          </Box>
         );
       case 2:
         return (
-          <>
+          <Box ml={10} mr={10}>
             <ReviewQuotation
               handleBack={handleBack}
               handleNext={handleNext}
               activeStep={step}
             />
-          </>
+          </Box>
         );
       default:
         throw new Error("Unknown step");
@@ -61,9 +65,27 @@ function Quotation() {
   };
 
   return (
-    <Box sx={{ margin: "0 20%" }}>
-      <QuotationHeader />
-      <QuotationStepper activeStep={activeStep} />
+    <Box
+      style={{
+        display: "flex",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
+      <Box
+        ml={10}
+        mr={10}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          maxWidth: boxWidth,
+          width: "100%",
+        }}
+      >
+        <QuotationHeader />
+        <QuotationStepper activeStep={activeStep} />
+      </Box>
       {getStepContent(activeStep, handleBack, handleNext)}
     </Box>
   );
@@ -85,41 +107,16 @@ const QuotationHeader = () => {
 const steps = ["Information", "Details", "Review your order"];
 const QuotationStepper = ({ activeStep }) => {
   return (
-    <Stepper activeStep={activeStep} sx={{ margin: "50px 0" }}>
+    <Stepper
+      activeStep={activeStep}
+      sx={{ padding: "20px", marginBottom: "20px" }}
+    >
       {steps.map((label) => (
         <Step key={label}>
           <StepLabel>{label}</StepLabel>
         </Step>
       ))}
     </Stepper>
-  );
-};
-
-const ButtonSection = ({
-  handleNext,
-  activeStep,
-  handleBack,
-  handleSaveForm,
-}) => {
-  return (
-    <Box sx={{ display: "flex", flexDirection: "row", mt: 3, mb: 3 }}>
-      <Button
-        variant="outlined"
-        disabled={activeStep === 0}
-        onClick={handleBack}
-      >
-        Back
-      </Button>
-      {handleSaveForm ? (
-        <Button type="submit" variant="contained" sx={{ ml: "auto" }}>
-          {activeStep === steps.length - 1 ? "Finish" : "Next"}
-        </Button>
-      ) : (
-        <Button variant="contained" onClick={handleNext} sx={{ ml: "auto" }}>
-          {activeStep === steps.length - 1 ? "Finish" : "Next"}
-        </Button>
-      )}
-    </Box>
   );
 };
 

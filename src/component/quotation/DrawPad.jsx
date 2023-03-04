@@ -1,13 +1,12 @@
 import React from "react";
 import ButtonSection from "./ButtonSection";
 import DrawingPanel from "./DrawingPanel";
-import Temp from "./Temp";
+// import Temp from "./DrawingPanel";
 
-function DrawPad({ handleNext, handleBack, activeStep }) {
+function DrawPad({ handleNext, handleBack, activeStep, boxWidth }) {
   return (
     <>
-      {/* <DrawingPanel /> */}
-      <Temp />
+      <DrawingPanel boxWidth={boxWidth} />
       <ButtonSection
         handleBack={handleBack}
         handleNext={handleNext}

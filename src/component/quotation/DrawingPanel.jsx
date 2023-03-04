@@ -1,70 +1,59 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Stage, Layer, Rect, Image, Transformer } from "react-konva";
-import useImage from "use-image";
-import sink1 from "./images/sink1.png";
-import sink2 from "./images/sink2.png";
-import stove1 from "./images/stove1.png";
-import stove2 from "./images/stove2.png";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { Stage, Layer, Rect, Transformer, Image, Text } from "react-konva";
 import { ImageList } from "./images/images";
-import { reactNativeDarkTokens } from "@aws-amplify/ui";
-
-const URLImage = ({
-  image,
-  handleDragStart,
-  handleDragEnd,
-  handleDragMove,
-  handleResize,
-  onSelect,
-  isSelected,
-}) => {
-  const [img] = useImage(image.src);
-  const [transform, setTransform] = useState({
-    x: image.x,
-    y: image.y,
-    scaleX: 1,
-    scaleY: 1,
-  });
-  const handleTransform = (event) => {
-    const node = event.target;
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-    console.log("999", event.target);
-    setTransform({
-      ...transform,
-      x: node.x(),
-      y: node.y(),
-      scaleX: scaleX,
-      scaleY: scaleY,
-    });
-  };
-  return (
-    <Image
-      image={img}
-      x={transform.x}
-      y={transform.y}
-      scaleX={transform.scaleX}
-      scaleY={transform.scaleY}
-      //   x={image.x}
-      //   y={image.y}
-      // I will use offset to set origin to the center of the image
-      offsetX={img ? img.width / 2 : 0}
-      offsetY={img ? img.height / 2 : 0}
-      draggable
-      transformable
-      onSelect={true}
-      onTransformEnd={handleTransform}
-      isSelected
-      //   onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragMove={handleDragMove}
-      //   onTransform={handleResize}
-    />
-  );
+import useImage from "use-image";
+import {
+  Button,
+  TextField,
+  Grid,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  Divider,
+} from "@mui/material";
+import CanvasToolbar from "./CanvasToolbar";
+import { Box } from "@mui/system";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+const moveItemToTop = (item) => {
+  const selectedShape = item;
+  selectedShape.moveToTop();
+  selectedShape.getLayer().batchDraw();
 };
 
-const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }) => {
-  const shapeRef = React.useRef();
-  const trRef = React.useRef();
+const getRatioForItem = (maxWidth) => {
+  let ratio = 1;
+  if (maxWidth <= 1000) {
+    return ratio;
+  } else if (maxWidth <= 2000) {
+    ratio = 2;
+  } else if (maxWidth <= 3000) {
+    ratio = 3;
+  } else if (maxWidth <= 4000) {
+    ratio = 4;
+  } else if (maxWidth <= 5000) {
+    ratio = 5;
+  } else if (maxWidth <= 6000) {
+    ratio = 6;
+  } else {
+    ratio = 1;
+  }
+
+  return ratio;
+};
+
+const Rectangle = ({
+  shapeProps,
+  isSelected,
+  onSelect,
+  onChange,
+  ratio,
+  setSelectedItem,
+}) => {
+  const shapeRef = useRef();
+  const trRef = useRef();
+  const [currentWidth, setCurrentWidth] = useState(shapeProps.width);
+  const [currentHeight, setCurrentHeight] = useState(shapeProps.height);
 
   React.useEffect(() => {
     if (isSelected) {
@@ -88,6 +77,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }) => {
             x: e.target.x(),
             y: e.target.y(),
           });
+          //   moveItemToTop(e.target);
         }}
         onTransformEnd={(e) => {
           // transformer is changing scale of the node
@@ -101,27 +91,138 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }) => {
           // we will reset it back
           node.scaleX(1);
           node.scaleY(1);
+
           onChange({
             ...shapeProps,
             x: node.x(),
             y: node.y(),
             // set minimal value
-            width: Math.max(5, node.width() * scaleX),
-            height: Math.max(node.height() * scaleY),
+            width: +Math.max(5, node.width() * scaleX).toFixed(0),
+            height: +Math.max(node.height() * scaleY).toFixed(0),
           });
         }}
       />
       {isSelected && (
-        <Transformer
-          ref={trRef}
-          boundBoxFunc={(oldBox, newBox) => {
-            // limit resize
-            if (newBox.width < 5 || newBox.height < 5) {
-              return oldBox;
-            }
-            return newBox;
-          }}
-        />
+        <>
+          <Transformer
+            ref={trRef}
+            boundBoxFunc={(oldBox, newBox) => {
+              // limit resize
+              setCurrentWidth(newBox.width.toFixed(0));
+              setCurrentHeight(newBox.height.toFixed(0));
+              setSelectedItem((prev) => ({
+                ...prev,
+                width: +newBox.width.toFixed(0),
+                height: +newBox.height.toFixed(0),
+              }));
+
+              if (newBox.width < 5 || newBox.height < 5) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+          />
+          <Text
+            text={`W: ${currentWidth * ratio}, H: ${currentHeight * ratio}`}
+            fill={"black"}
+            x={shapeRef.current.x()}
+            y={shapeRef.current.y() - 20}
+            fontSize={15}
+          />
+        </>
+      )}
+    </React.Fragment>
+  );
+};
+
+const ImageItem = ({
+  imageProps,
+  isSelected,
+  onSelect,
+  onChange,
+  ratio,
+  setSelectedItem,
+}) => {
+  const [img] = useImage(imageProps.src);
+  const imgRef = React.useRef();
+  const trRef = React.useRef();
+  const [currentWidth, setCurrentWidth] = useState(imageProps.width);
+  const [currentHeight, setCurrentHeight] = useState(imageProps.height);
+
+  useEffect(() => {
+    if (isSelected) {
+      // we need to attach transformer manually
+      trRef.current.nodes([imgRef.current]);
+      trRef.current.getLayer().batchDraw();
+    }
+  }, [isSelected]);
+
+  return (
+    <React.Fragment>
+      <Image
+        image={img}
+        onClick={onSelect}
+        onTap={onSelect}
+        ref={imgRef}
+        {...imageProps}
+        draggable
+        onDragEnd={(e) => {
+          onChange({
+            ...imageProps,
+            x: e.target.x(),
+            y: e.target.y(),
+          });
+          moveItemToTop(e.target);
+        }}
+        onTransformEnd={(e) => {
+          // transformer is changing scale of the node
+          // and NOT its width or height
+          // but in the store we have only width and height
+          // to match the data better we will reset scale on transform end
+          const node = imgRef.current;
+          const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+
+          // we will reset it back
+          node.scaleX(1);
+          node.scaleY(1);
+          onChange({
+            ...imageProps,
+            x: node.x(),
+            y: node.y(),
+            // set minimal value
+            width: +Math.max(5, node.width() * scaleX).toFixed(0),
+            height: +Math.max(node.height() * scaleY).toFixed(0),
+          });
+        }}
+      />
+      {isSelected && (
+        <>
+          <Transformer
+            ref={trRef}
+            boundBoxFunc={(oldBox, newBox) => {
+              // limit resize
+              setCurrentWidth(newBox.width.toFixed(0));
+              setCurrentHeight(newBox.height.toFixed(0));
+              setSelectedItem((prev) => ({
+                ...prev,
+                width: +newBox.width.toFixed(0),
+                height: +newBox.height.toFixed(0),
+              }));
+              if (newBox.width < 5 || newBox.height < 5) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+          />
+          <Text
+            text={`W: ${currentWidth * ratio}, H: ${currentHeight * ratio}`}
+            fill={"black"}
+            x={imgRef.current.x()}
+            y={imgRef.current.y() - 20}
+            fontSize={15}
+          />
+        </>
       )}
     </React.Fragment>
   );
@@ -133,7 +234,7 @@ const initialRectangles = [
     y: 10,
     width: 100,
     height: 100,
-    fill: "red",
+    fill: "#D9CAB3",
     id: "rect1",
   },
   {
@@ -141,81 +242,122 @@ const initialRectangles = [
     y: 150,
     width: 100,
     height: 100,
-    fill: "green",
+    fill: "#6D9886",
     id: "rect2",
   },
 ];
 
-const DrawingPanel = () => {
-  const [rectangles, setRectangles] = React.useState(initialRectangles);
-  const [selectedId, selectShape] = React.useState(null);
-
-  //   const dragUrl = React.useRef();
-  //   const dragImage = React.useRef();
-  const stageRef = React.useRef();
-  const [images, setImages] = React.useState([]);
-  const [rects, setRects] = React.useState([]);
-
+const DrawingPanel = ({ boxWidth }) => {
+  const [rectangleList, setRectangleList] = useState(initialRectangles);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [images, setImages] = useState([]);
+  const stageRef = useRef();
+  const [rects, setRects] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const selectedShapeRef = useRef(null);
+  const [itemNo, setItemNo] = useState("1");
+  const [maxWidth, setMaxWidth] = useState(null);
 
-  //   const handleDragStart = () => {
-  //     setIsDragging(true);
-  //   };
-
-  //   const handleDragEnd = (e) => {
-  //     setIsDragging(false);
-  //     if (selectedShapeRef.current) {
-  //       const shapeType =
-  //         selectedShapeRef.current.getAttribute("data-shape-type");
-  //       switch (shapeType) {
-  //         case "rect":
-  //           setRect({
-  //             ...rect,
-  //             x: e.target.x(),
-  //             y: e.target.y(),
-  //           });
-  //           break;
-  //         case "circle":
-  //           // handle circle drop
-  //           break;
-  //         // add more shape types here
-  //         default:
-  //           break;
-  //       }
-  //     }
-  //   };
-
-  //   const handleDragMove = (e) => {
-  //     if (isDragging) {
-  //       const stage = e.target.getStage();
-  //       const pointerPos = stage.getPointerPosition();
-  //       const x = Math.max(pointerPos.x - rect.width / 2, 0);
-  //       const y = Math.max(pointerPos.y - rect.height / 2, 0);
-  //       setRect({
-  //         ...rect,
-  //         x,
-  //         y,
-  //       });
-  //     }
-  //   };
-
-  //   const handleShapeSelect = (e) => {
-  //     selectedShapeRef.current = e.target;
-  //   };
-
-  //   const handleResize = (e) => {
-  //     setRect({
-  //       ...rect,
-  //       width: e.target.width(),
-  //       height: e.target.height(),
-  //     });
-  //   };
   const checkDeselect = (e) => {
     // deselect when clicked on empty area
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
-      selectShape(null);
+      setSelectedItem(null);
+    }
+  };
+
+  const handleImageSelect = (e, image) => {
+    // const itemId = e.target.id();
+    moveItemToTop(e.target);
+    console.log("selectedId", image);
+    setSelectedItem(image);
+  };
+
+  const handleStoneSelect = (e, stone) => {
+    //    moveItemToTop(e.target);
+    // const itemId = e.target.id();
+    console.log("selectedId", stone);
+    setSelectedItem(stone);
+  };
+
+  //delete single item in key down
+  useEffect(() => {
+    const handleDelete = (event) => {
+      if (
+        (event.key === "Delete" || event.key === "Backspace") &&
+        selectedItem
+      ) {
+        setImages((prev) =>
+          prev.filter((image) => image.id !== selectedItem?.id)
+        );
+        setRects((prev) => prev.filter((rect) => rect.id !== selectedItem?.id));
+        setSelectedItem(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleDelete);
+    return () => {
+      window.removeEventListener("keydown", handleDelete);
+    };
+  }, [selectedItem]);
+
+  //clear the stage
+  const handleClear = (item) => {
+    setImages([]);
+    setRects([]);
+  };
+
+  const handleOnDrop = (e) => {
+    e.preventDefault();
+    // get current point position and set item placement point
+    stageRef.current.setPointersPositions(e);
+    const x = stageRef.current.getPointerPosition(e).x - isDragging.width / 2;
+    const y = stageRef.current.getPointerPosition(e).y - isDragging.height / 2;
+    console.log(isDragging);
+    // add image
+    if (isDragging.type === "image") {
+      setImages(
+        images.concat([
+          {
+            x,
+            y,
+            ...isDragging,
+          },
+        ])
+      );
+      setItemNo((prev) => (+prev + 1).toString());
+    } else {
+      setRects(
+        rects.concat([
+          {
+            ...isDragging,
+            x,
+            y,
+          },
+        ])
+      );
+      setItemNo((prev) => (+prev + 1).toString());
+    }
+  };
+
+  const handleUpdateItem = (updatedItem) => {
+    console.log(updatedItem);
+    if (updatedItem?.type === "image") {
+      const updatedItems = images.map((img) => {
+        if (img.id === updatedItem.id) {
+          return { ...updatedItem };
+        }
+        return img;
+      });
+      setImages(updatedItems);
+    } else {
+      const updatedItems = rects.map((rect) => {
+        if (rect.id === updatedItem.id) {
+          return { ...updatedItem };
+        }
+        return rect;
+      });
+
+      setRects(updatedItems);
     }
   };
 
@@ -223,173 +365,281 @@ const DrawingPanel = () => {
     console.log("images", images);
   }, [images]);
   useEffect(() => {
+    console.log("rectangles sample", rectangleList);
+  }, [rectangleList]);
+  useEffect(() => {
     console.log("rects", rects);
   }, [rects]);
+  useEffect(() => {
+    console.log("isDragging", isDragging);
+  }, [isDragging]);
+  useEffect(() => {
+    console.log("maxWidth", maxWidth);
+  }, [maxWidth]);
+
+  const memoisedToolbar = useMemo(() => {
+    if (!selectedItem) return;
+    return (
+      <CanvasToolbar item={selectedItem} handleChange={handleUpdateItem} />
+    );
+  }, [selectedItem]);
 
   return (
     <div>
-      {ImageList.map((img) => {
-        return (
-          <img
-            key={img.id}
-            id={img.id}
-            alt="lion"
-            src={img.src}
-            draggable="true"
-            onDragStart={(e) => {
-              let imgTemp = {
-                type: "image",
-                id: e.target.id,
-                src: e.target.src,
-                width: e.target.width,
-                height: e.target.height,
-              };
-              setIsDragging(imgTemp);
-            }}
-          />
-        );
-      })}
-      {rectangles.map((rect) => {
-        return (
-          <div
-            style={{
-              width: rect.width,
-              height: rect.height,
-              backgroundColor: rect.fill,
-              cursor: "move",
-            }}
-            data-shape-type="rect"
-            draggable="true"
-            onDragStart={(e) => {
-              let imgTemp = {
-                type: "shape",
-                id: rect.id,
-                src: rect.id,
-                width: rect.width,
-                height: rect.height,
-              };
-              setIsDragging(imgTemp);
-            }}
-          />
-        );
-      })}
-      {/* <div
-        style={{
-          width: "50px",
-          height: "50px",
-          backgroundColor: "red",
-          cursor: "move",
-        }}
-        data-shape-type="rect"
-        draggable="true"
-        onDragStart={(e) => {
-          let imgTemp = {
-            id: "square1",
-            src: "something",
-            width: e.target.clientWidth,
-            height: e.target.clientHeight,
-          };
-          setIsDragging(imgTemp);
+      <TextField
+        value={maxWidth}
+        type="number"
+        label="Maximum width"
+        fullWidth
+        helperText="please enter the maximum length of you project"
+        onChange={(e) => {
+          setMaxWidth(e.target.value);
         }}
       />
-      <div
-        style={{
-          width: "50px",
-          height: "50px",
-          backgroundColor: "blue",
-          cursor: "move",
-        }}
-        data-shape-type="circle"
-        draggable="true"
-        onDragStart={(e) => {
-          console.log(e);
-          let imgTemp = {
-            id: "square2",
-            src: "something else",
-            width: e.target.clientWidth,
-            height: e.target.clientHeight,
-          };
-          setIsDragging(imgTemp);
-        }}
-      /> */}
-      <div
-        onDrop={(e) => {
-          e.preventDefault();
-          console.log(e);
-          // register event position
-          stageRef.current.setPointersPositions(e);
-          // add image
-          if (isDragging.type === "image") {
-            setImages(
-              images.concat([
-                {
-                  ...stageRef.current.getPointerPosition(),
-                  ...isDragging,
-                },
-              ])
-            );
-          } else {
-            setRects(
-              rects.concat([
-                {
-                  ...stageRef.current.getPointerPosition(),
-                  ...isDragging,
-                },
-              ])
-            );
+
+      <Divider style={{ margin: "20px" }}>Canvas</Divider>
+      <Button onClick={handleClear} variant="contained">
+        Clear
+      </Button>
+      {/* Start Canvas */}
+      <Grid container mt={2}>
+        <Grid item xs={2}>
+          {
+            <ResourcesSection
+              ImageList={ImageList}
+              rectangleList={rectangleList}
+              itemNo={itemNo}
+              setIsDragging={setIsDragging}
+            />
           }
-        }}
-        onDragOver={(e) => e.preventDefault()}
-      >
-        <div>
-          <Stage
-            width={window.innerWidth}
-            height={window.innerHeight}
-            ref={stageRef}
-            onMouseDown={checkDeselect}
-            onTouchStart={checkDeselect}
-            style={{ border: "1px solid grey" }}
-          >
-            <Layer>
-              {images.map((image) => {
-                return (
-                  <URLImage
-                    image={image}
-                    // onSelect={() => {
-                    //   setSelectImage(image);
-                    // }}
-                    // isSelected={image === selectImage}
-                    // handleDragStart={handleDragStart}
-                    // handleDragEnd={handleDragEnd}
-                    // handleDragMove={handleDragMove}
-                    // handleResize={handleResize}
-                  />
-                );
-              })}
-            </Layer>
-            <Layer>
-              {rectangles.map((rect) => {
-                return (
-                  <Rectangle
-                    key={rect.id}
-                    shapeProps={rect}
-                    isSelected={rect.id === selectedId}
-                    onSelect={() => {
-                      selectShape(rect.id);
-                    }}
-                    onChange={(newAttrs) => {
-                      const rects = rectangles.slice();
-                      rects[reactNativeDarkTokens.id] = newAttrs;
-                      setRectangles(rects);
-                    }}
-                  />
-                );
-              })}
-            </Layer>
-          </Stage>
-        </div>
-      </div>
+          {/* {ImageList.map((img) => {
+            return (
+              <img
+                key={img.id}
+                id={img.id}
+                alt="lion"
+                src={img.src}
+                draggable="true"
+                onDragStart={(e) => {
+                  let imgTemp = {
+                    type: "image",
+                    id: itemNo,
+                    src: e.target.src,
+                    width: e.target.width,
+                    height: e.target.height,
+                  };
+                  setIsDragging(imgTemp);
+                }}
+              />
+            );
+          })}
+          {rectangleList.map((rectItem) => {
+            return (
+              <div
+                style={{
+                  width: rectItem.width,
+                  height: rectItem.height,
+                  backgroundColor: rectItem.fill,
+                  cursor: "move",
+                }}
+                data-shape-type="rect"
+                draggable="true"
+                onDragStart={(e) => {
+                  let rectTemp = rectangleList.find(
+                    (rec) => rec.id === rectItem.id
+                  );
+                  rectTemp.id = itemNo;
+                  setIsDragging(rectTemp);
+                }}
+              />
+            );
+          })} */}
+        </Grid>
+        <Grid item xs={10}>
+          <>
+            {/* canvasToolbar */}
+            {memoisedToolbar}
+            <div
+              onDrop={handleOnDrop}
+              onDragOver={(e) => {
+                e.preventDefault();
+              }}
+            >
+              <Stage
+                width={boxWidth}
+                height={window.innerHeight}
+                ref={stageRef}
+                onMouseDown={checkDeselect}
+                onTouchStart={checkDeselect}
+                style={{ border: "1px solid grey" }}
+              >
+                <Layer>
+                  {rects.map((rect, i) => {
+                    return (
+                      <>
+                        <Rectangle
+                          key={i}
+                          shapeProps={rect}
+                          isSelected={rect.id === selectedItem?.id}
+                          onSelect={(e) => handleStoneSelect(e, rect)}
+                          setSelectedItem={setSelectedItem}
+                          onChange={(newAttrs) => {
+                            console.log("onchange newAttrs", newAttrs);
+                            const rectTemp = rects.slice();
+                            rectTemp[i] = newAttrs;
+                            setRects(rectTemp);
+                          }}
+                          onDragStart={(e) => {
+                            let rectTemp = rects.find(
+                              (rec) => rec.id === rect.id
+                            );
+
+                            setIsDragging(rectTemp);
+                          }}
+                          ratio={getRatioForItem(+maxWidth)}
+                        />
+                      </>
+                    );
+                  })}
+                  {images.map((image, i) => {
+                    return (
+                      <ImageItem
+                        key={i}
+                        imageProps={image}
+                        isSelected={image.id === selectedItem?.id}
+                        setSelectedItem={setSelectedItem}
+                        onSelect={(e) => handleImageSelect(e, image)}
+                        onChange={(newAttrs) => {
+                          const imageTemp = images.slice();
+                          imageTemp[i] = newAttrs;
+                          setImages(imageTemp);
+                        }}
+                        onDragStart={(e) => {
+                          let imageTemp = images.find(
+                            (img) => img.id === image.id
+                          );
+                          setIsDragging(imageTemp);
+                        }}
+                        ratio={getRatioForItem(+maxWidth)}
+                      />
+                    );
+                  })}
+                </Layer>
+              </Stage>
+            </div>
+          </>
+        </Grid>
+      </Grid>
     </div>
+  );
+};
+
+const ResourcesSection = ({
+  ImageList,
+  rectangleList,
+  itemNo,
+  setIsDragging,
+}) => {
+  return (
+    <Box mr={3}>
+      <Accordion defaultExpanded={true}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1a-content"
+          id="panel1a-header"
+        >
+          <Typography>Objects</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box>
+            <Grid container spacing={2}>
+              {ImageList.map((img) => (
+                <Grid item xs={6}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      paddingTop: "100%",
+                      position: "relative",
+                    }}
+                  >
+                    <img
+                      key={img.id}
+                      id={img.id}
+                      src={img.src}
+                      draggable="true"
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                      }}
+                      onDragStart={(e) => {
+                        let imgTemp = {
+                          type: "image",
+                          id: itemNo,
+                          src: e.target.src,
+                          width: e.target.naturalWidth,
+                          height: e.target.naturalHeight,
+                        };
+                        setIsDragging(imgTemp);
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+      <Accordion defaultExpanded={true}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel2a-content"
+          id="panel2a-header"
+        >
+          <Typography>Shapes</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box>
+            <Grid container spacing={2}>
+              {rectangleList.map((rectItem) => (
+                <Grid item xs={6}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      paddingTop: "100%",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: rectItem.fill,
+                        cursor: "move",
+                      }}
+                      data-shape-type="rect"
+                      draggable="true"
+                      onDragStart={(e) => {
+                        let rectTemp = rectangleList.find(
+                          (rec) => rec.id === rectItem.id
+                        );
+                        rectTemp.id = itemNo;
+                        setIsDragging(rectTemp);
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    </Box>
   );
 };
 
