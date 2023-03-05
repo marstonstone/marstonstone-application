@@ -1,58 +1,51 @@
-import React, { useState, useEffect, useRef } from "react";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import { Box } from "@mui/material";
-import Radio from "@mui/material/Radio";
-import RadioGroup from "@mui/material/RadioGroup";
-import FormControl from "@mui/material/FormControl";
-import FormLabel from "@mui/material/FormLabel";
-import { toast } from "react-toastify";
-import { useForm, useController } from "react-hook-form";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { enum as zodEnum, number, object, string, boolean } from "zod";
-import { useDispatch, useSelector } from "react-redux";
-import { cacheOrder } from "../../redux/slices/orderSlice";
-import ButtonSection from "./ButtonSection";
+import React, { useState, useEffect, useRef } from 'react';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import { Box } from '@mui/material';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+import { toast } from 'react-toastify';
+import { useForm, useController } from 'react-hook-form';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { enum as zodEnum, number, object, string, boolean } from 'zod';
+import { useDispatch, useSelector } from 'react-redux';
+import { cacheOrder } from '../../redux/slices/orderSlice';
+import ButtonSection from './ButtonSection';
 
 const schema = object({
-  fName: string()
-    .min(2, "Please enter a valid first name")
-    .max(32, "First name must be less than 100 characters"),
-  lName: string()
-    .min(2, "Please enter a valid first name")
-    .max(32, "First name must be less than 100 characters"),
+  fName: string().min(2, 'Please enter a valid first name').max(32, 'First name must be less than 100 characters'),
+  lName: string().min(2, 'Please enter a valid first name').max(32, 'First name must be less than 100 characters'),
   email: string().email(),
-  mobile: string()
-    .startsWith("04", "Mobile number should start with '04'")
-    .min(10)
-    .max(14),
+  mobile: string().startsWith('04', "Mobile number should start with '04'").min(10).max(14),
   companyName: string().optional(),
   ABN: string().optional(),
   address: object({
     unitNo: string().optional(),
     streetNo: string().optional(),
     streetName: string().optional(),
-    suburb: string().min(2, "Please enter a suburb"),
+    suburb: string().min(2, 'Please enter a suburb'),
     city: string().optional(),
     state: string().optional(),
     postCode: string().optional(),
     country: string().optional(),
   }).optional(),
-  requestInstall: zodEnum(["yes", "no"]).nullable().optional(),
-  isUpstairs: zodEnum(["yes", "no"]).nullable().optional(),
-  floors: string().min(1, "Please valid number").optional(),
+  requestInstall: zodEnum(['yes', 'no']).nullable().optional(),
+  isUpstairs: zodEnum(['yes', 'no']).nullable().optional(),
+  floors: string().min(1, 'Please valid number').optional(),
   specialCondition: string().optional(),
-  supplier: zodEnum(["Lavi Stone", "B", "C", "D"]),
+  supplier: zodEnum(['Lavi Stone', 'B', 'C', 'D']),
 });
 
 function QuotationForm({ handleNext, handleBack, activeStep }) {
   const dispatch = useDispatch();
-  const { order } = useSelector((state) => state.order);
+  const order = useSelector((state) => state.order.order);
   const {
     register,
     control,
@@ -65,27 +58,25 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
     resolver: zodResolver(schema),
   });
 
-  const [requestInstall, setRequestInstall] = useState(
-    order.requestInstall ?? "no"
-  );
-  const [isUpstairs, setIsUpstairs] = useState(order.isUpstairs ?? "no");
-  const [supplier, setSupplier] = useState(order.supplier ?? "Lavi Stone");
+  const [requestInstall, setRequestInstall] = useState(order.requestInstall ?? 'no');
+  const [isUpstairs, setIsUpstairs] = useState(order.isUpstairs ?? 'no');
+  const [supplier, setSupplier] = useState(order.supplier ?? 'Lavi Stone');
 
-  const { field } = useController({ name: "supplier", control });
+  const { field } = useController({ name: 'supplier', control });
 
-  const supplierSet = ["Lavi Stone", "B", "C", "D"];
-  const unregisterKeys = ["address", "isUpstairs", "supplier", "floors"];
+  const supplierSet = ['Lavi Stone', 'B', 'C', 'D'];
+  const unregisterKeys = ['address', 'isUpstairs', 'supplier', 'floors'];
 
   //unregister unused keys when load from previous page
   useEffect(() => {
-    console.log("errors", errors);
-    console.log("install", requestInstall);
-    console.log("isUpstairs", isUpstairs);
-    console.log("supplier", supplier);
-    if (order?.requestInstall === "no") {
+    console.log('errors', errors);
+    console.log('install', requestInstall);
+    console.log('isUpstairs', isUpstairs);
+    console.log('supplier', supplier);
+    if (order?.requestInstall === 'no') {
       unregister(unregisterKeys);
-      setIsUpstairs("no");
-      setRequestInstall("no");
+      setIsUpstairs('no');
+      setRequestInstall('no');
     }
   }, [order, errors]);
 
@@ -110,7 +101,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TextField
-              {...register("fName", { required: true })}
+              {...register('fName', { required: true })}
               label="First name"
               fullWidth
               autoComplete="first name"
@@ -120,7 +111,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              {...register("lName", { required: true })}
+              {...register('lName', { required: true })}
               label="Last name"
               fullWidth
               autoComplete="last name"
@@ -130,7 +121,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              {...register("mobile", { required: true })}
+              {...register('mobile', { required: true })}
               label="Mobile"
               fullWidth
               autoComplete="mobile"
@@ -140,7 +131,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              {...register("email", { required: true })}
+              {...register('email', { required: true })}
               label="Email"
               fullWidth
               autoComplete="email"
@@ -150,7 +141,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              {...register("companyName")}
+              {...register('companyName')}
               label="Company Name"
               fullWidth
               autoComplete="company"
@@ -160,7 +151,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              {...register("ABN")}
+              {...register('ABN')}
               label="ABN/ARN"
               fullWidth
               autoComplete="ABN"
@@ -202,7 +193,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           <RadioGroup
             row
             value={requestInstall}
-            {...register("requestInstall")}
+            {...register('requestInstall')}
             onChange={(e) => {
               console.log(e);
               unregister(unregisterKeys);
@@ -214,7 +205,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           </RadioGroup>
         </FormControl>
 
-        {requestInstall === "yes" ? (
+        {requestInstall === 'yes' ? (
           <>
             <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
               Installation Address
@@ -223,7 +214,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               <Grid item xs={3}>
                 <TextField
                   // type="number"
-                  {...register("address.unitNo", { required: true })}
+                  {...register('address.unitNo', { required: true })}
                   label="Unit#"
                   fullWidth
                   autoComplete="Install unit number"
@@ -234,7 +225,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               <Grid item xs={3}>
                 <TextField
                   // type="number"
-                  {...register("address.streetNo")}
+                  {...register('address.streetNo')}
                   label="Street#"
                   fullWidth
                   autoComplete="Install street number"
@@ -244,7 +235,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               </Grid>
               <Grid item xs={3}>
                 <TextField
-                  {...register("address.streetName")}
+                  {...register('address.streetName')}
                   label="Street name"
                   fullWidth
                   autoComplete="Install street name"
@@ -254,7 +245,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               </Grid>
               <Grid item xs={3}>
                 <TextField
-                  {...register("address.suburb", {
+                  {...register('address.suburb', {
                     required: true,
                   })}
                   label="Suburb"
@@ -266,7 +257,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  {...register("address.city")}
+                  {...register('address.city')}
                   label="City"
                   fullWidth
                   autoComplete="Install city"
@@ -276,7 +267,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  {...register("address.state")}
+                  {...register('address.state')}
                   label="State/Province/Region"
                   autoComplete="Install state"
                   fullWidth
@@ -287,7 +278,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               <Grid item xs={12} sm={6}>
                 <TextField
                   // type="number"
-                  {...register("address.postCode")}
+                  {...register('address.postCode')}
                   label="Zip / Postal code"
                   fullWidth
                   autoComplete="Install postal-code"
@@ -297,7 +288,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  {...register("address.country")}
+                  {...register('address.country')}
                   label="Country"
                   fullWidth
                   autoComplete="Install country"
@@ -313,31 +304,23 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
                   <RadioGroup
                     row
                     value={isUpstairs}
-                    {...register("isUpstairs")}
+                    {...register('isUpstairs')}
                     onChange={(e) => {
-                      unregister("floors");
+                      unregister('floors');
                       setIsUpstairs(e.target.value);
                     }}
                   >
-                    <FormControlLabel
-                      value="yes"
-                      control={<Radio />}
-                      label="Yes"
-                    />
-                    <FormControlLabel
-                      value="no"
-                      control={<Radio />}
-                      label="No"
-                    />
+                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="no" control={<Radio />} label="No" />
                   </RadioGroup>
                 </FormControl>
               </Grid>
-              {isUpstairs === "yes" ? (
+              {isUpstairs === 'yes' ? (
                 <>
                   <Grid item xs={12}>
                     <TextField
                       id="floorNo"
-                      {...register("floors")}
+                      {...register('floors')}
                       label="How many floors"
                       error={!!errors.floors}
                       helperText={errors.floors?.message ?? null}
@@ -356,7 +339,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
           <FormControl fullWidth>
             <FormLabel mb={2}>Supplier </FormLabel>
             <Select
-              {...register("supplier", { required: true })}
+              {...register('supplier', { required: true })}
               value={supplier}
               // value={field.value}
               label="Supplier"
@@ -379,7 +362,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
         </Typography>
         <Grid item xs={12} sm={12} mt={2}>
           <TextField
-            {...register("specialCondition")}
+            {...register('specialCondition')}
             label="Writing anything you want..."
             fullWidth
             multiline
@@ -389,12 +372,7 @@ function QuotationForm({ handleNext, handleBack, activeStep }) {
             helperText={errors.specialCondition?.message ?? null}
           />
         </Grid>
-        <ButtonSection
-          handleBack={handleBack}
-          handleNext={handleNext}
-          handleSaveForm={true}
-          activeStep={activeStep}
-        />
+        <ButtonSection handleBack={handleBack} handleNext={handleNext} handleSaveForm={true} activeStep={activeStep} />
       </form>
     </Box>
   );

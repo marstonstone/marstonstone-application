@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Stage, Layer, Rect, Transformer, Image, Text } from "react-konva";
-import { ImageList } from "./images/images";
-import useImage from "use-image";
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Stage, Layer, Rect, Transformer, Image, Text } from 'react-konva';
+import { ImageList } from './images/images';
+import useImage from 'use-image';
 import {
   Button,
   TextField,
@@ -11,10 +11,12 @@ import {
   AccordionDetails,
   Typography,
   Divider,
-} from "@mui/material";
-import CanvasToolbar from "./CanvasToolbar";
-import { Box } from "@mui/system";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+} from '@mui/material';
+import CanvasToolbar from './CanvasToolbar';
+import { Box } from '@mui/system';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useSelector } from 'react-redux';
+
 const moveItemToTop = (item) => {
   const selectedShape = item;
   selectedShape.moveToTop();
@@ -42,18 +44,9 @@ const getRatioForItem = (maxWidth) => {
   return ratio;
 };
 
-const Rectangle = ({
-  shapeProps,
-  isSelected,
-  onSelect,
-  onChange,
-  ratio,
-  setSelectedItem,
-}) => {
+const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelectedItem }) => {
   const shapeRef = useRef();
   const trRef = useRef();
-  const [currentWidth, setCurrentWidth] = useState(shapeProps.width);
-  const [currentHeight, setCurrentHeight] = useState(shapeProps.height);
 
   React.useEffect(() => {
     if (isSelected) {
@@ -108,8 +101,6 @@ const Rectangle = ({
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
-              setCurrentWidth(newBox.width.toFixed(0));
-              setCurrentHeight(newBox.height.toFixed(0));
               setSelectedItem((prev) => ({
                 ...prev,
                 width: +newBox.width.toFixed(0),
@@ -123,8 +114,8 @@ const Rectangle = ({
             }}
           />
           <Text
-            text={`W: ${currentWidth * ratio}, H: ${currentHeight * ratio}`}
-            fill={"black"}
+            text={`W: ${shapeProps.width * ratio}, H: ${shapeProps.height * ratio}`}
+            fill={'black'}
             x={shapeRef.current.x()}
             y={shapeRef.current.y() - 20}
             fontSize={15}
@@ -135,19 +126,10 @@ const Rectangle = ({
   );
 };
 
-const ImageItem = ({
-  imageProps,
-  isSelected,
-  onSelect,
-  onChange,
-  ratio,
-  setSelectedItem,
-}) => {
+const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelectedItem }) => {
   const [img] = useImage(imageProps.src);
   const imgRef = React.useRef();
   const trRef = React.useRef();
-  const [currentWidth, setCurrentWidth] = useState(imageProps.width);
-  const [currentHeight, setCurrentHeight] = useState(imageProps.height);
 
   useEffect(() => {
     if (isSelected) {
@@ -175,10 +157,7 @@ const ImageItem = ({
           moveItemToTop(e.target);
         }}
         onTransformEnd={(e) => {
-          // transformer is changing scale of the node
-          // and NOT its width or height
-          // but in the store we have only width and height
-          // to match the data better we will reset scale on transform end
+          //change scale, x, y, width, height, when transforming
           const node = imgRef.current;
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
@@ -202,8 +181,6 @@ const ImageItem = ({
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
-              setCurrentWidth(newBox.width.toFixed(0));
-              setCurrentHeight(newBox.height.toFixed(0));
               setSelectedItem((prev) => ({
                 ...prev,
                 width: +newBox.width.toFixed(0),
@@ -216,8 +193,8 @@ const ImageItem = ({
             }}
           />
           <Text
-            text={`W: ${currentWidth * ratio}, H: ${currentHeight * ratio}`}
-            fill={"black"}
+            text={`W: ${imageProps.width * ratio}, H: ${imageProps.height * ratio}`}
+            fill={'black'}
             x={imgRef.current.x()}
             y={imgRef.current.y() - 20}
             fontSize={15}
@@ -234,73 +211,80 @@ const initialRectangles = [
     y: 10,
     width: 100,
     height: 100,
-    fill: "#D9CAB3",
-    id: "rect1",
+    fill: '#D9CAB3',
+    id: 'rect1',
   },
   {
     x: 150,
     y: 150,
     width: 100,
     height: 100,
-    fill: "#6D9886",
-    id: "rect2",
+    fill: '#6D9886',
+    id: 'rect2',
   },
 ];
 
-const DrawingPanel = ({ boxWidth }) => {
+const DrawingPanel = ({ boxWidth, setCanvasData }) => {
+  const order = useSelector((state) => state.order.order);
+
   const [rectangleList, setRectangleList] = useState(initialRectangles);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState(order?.canvas?.objects ?? []);
   const stageRef = useRef();
-  const [rects, setRects] = useState([]);
+  const [rects, setRects] = useState(order?.canvas?.shapes ?? []);
   const [isDragging, setIsDragging] = useState(false);
-  const [itemNo, setItemNo] = useState("1");
+  const [itemNo, setItemNo] = useState('1');
   const [maxWidth, setMaxWidth] = useState(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  //update Canvas data to be saved to redux
+  useEffect(() => {
+    setCanvasData((prev) => ({ ...prev, objects: [...images], shapes: [...rects] }));
+  }, [images, rects]);
 
   const checkDeselect = (e) => {
     // deselect when clicked on empty area
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
       setSelectedItem(null);
+      setIsFocused(false);
     }
   };
 
   const handleImageSelect = (e, image) => {
     // const itemId = e.target.id();
     moveItemToTop(e.target);
-    console.log("selectedId", image);
+    console.log('selectedId', image);
     setSelectedItem(image);
   };
 
   const handleStoneSelect = (e, stone) => {
     //    moveItemToTop(e.target);
-    // const itemId = e.target.id();
-    console.log("selectedId", stone);
+    console.log('selectedId', stone);
     setSelectedItem(stone);
   };
 
-  //delete single item in key down
+  //Delete single item in key down
   useEffect(() => {
     const handleDelete = (event) => {
-      if (
-        (event.key === "Delete" || event.key === "Backspace") &&
-        selectedItem
-      ) {
-        setImages((prev) =>
-          prev.filter((image) => image.id !== selectedItem?.id)
-        );
-        setRects((prev) => prev.filter((rect) => rect.id !== selectedItem?.id));
-        setSelectedItem(null);
+      if (isFocused) {
+        console.log(isFocused);
+        return;
+      } else {
+        if ((event.key === 'Delete' || event.key === 'Backspace') && selectedItem) {
+          setImages((prev) => prev.filter((image) => image.id !== selectedItem?.id));
+          setRects((prev) => prev.filter((rect) => rect.id !== selectedItem?.id));
+          setSelectedItem(null);
+        }
       }
     };
-
-    window.addEventListener("keydown", handleDelete);
+    window.addEventListener('keydown', handleDelete);
     return () => {
-      window.removeEventListener("keydown", handleDelete);
+      window.removeEventListener('keydown', handleDelete);
     };
-  }, [selectedItem]);
+  }, [selectedItem, isFocused]);
 
-  //clear the stage
+  //clear the Canvas
   const handleClear = (item) => {
     setImages([]);
     setRects([]);
@@ -314,7 +298,7 @@ const DrawingPanel = ({ boxWidth }) => {
     const y = stageRef.current.getPointerPosition(e).y - isDragging.height / 2;
     console.log(isDragging);
     // add image
-    if (isDragging.type === "image") {
+    if (isDragging.type === 'image') {
       setImages(
         images.concat([
           {
@@ -340,8 +324,11 @@ const DrawingPanel = ({ boxWidth }) => {
   };
 
   const handleUpdateItem = (updatedItem) => {
-    console.log(updatedItem);
-    if (updatedItem?.type === "image") {
+    console.log('updatedItem', updatedItem);
+    if (updatedItem?.id === selectedItem?.id) {
+      // setSelectedItem(updatedItem);
+    }
+    if (updatedItem?.type === 'image') {
       const updatedItems = images.map((img) => {
         if (img.id === updatedItem.id) {
           return { ...updatedItem };
@@ -362,27 +349,32 @@ const DrawingPanel = ({ boxWidth }) => {
   };
 
   useEffect(() => {
-    console.log("images", images);
+    console.log('images', images);
   }, [images]);
   useEffect(() => {
-    console.log("rectangles sample", rectangleList);
+    console.log('rectangles sample', rectangleList);
   }, [rectangleList]);
   useEffect(() => {
-    console.log("rects", rects);
+    console.log('rects', rects);
   }, [rects]);
   useEffect(() => {
-    console.log("isDragging", isDragging);
+    console.log('isDragging', isDragging);
   }, [isDragging]);
   useEffect(() => {
-    console.log("maxWidth", maxWidth);
+    console.log('maxWidth', maxWidth);
   }, [maxWidth]);
 
   const memoisedToolbar = useMemo(() => {
-    if (!selectedItem) return;
+    // if (!selectedItem) return;
     return (
-      <CanvasToolbar item={selectedItem} handleChange={handleUpdateItem} />
+      <CanvasToolbar
+        item={selectedItem}
+        handleChange={handleUpdateItem}
+        setIsFocused={setIsFocused}
+        setSelectedItem={setSelectedItem}
+      />
     );
-  }, [selectedItem]);
+  }, [selectedItem, images, rects]);
 
   return (
     <div>
@@ -397,12 +389,14 @@ const DrawingPanel = ({ boxWidth }) => {
         }}
       />
 
-      <Divider style={{ margin: "20px" }}>Canvas</Divider>
+      <Divider style={{ margin: '20px' }}>Canvas</Divider>
       <Button onClick={handleClear} variant="contained">
         Clear
       </Button>
       {/* Start Canvas */}
+
       <Grid container mt={2}>
+        {/* Resource Section */}
         <Grid item xs={2}>
           {
             <ResourcesSection
@@ -412,53 +406,13 @@ const DrawingPanel = ({ boxWidth }) => {
               setIsDragging={setIsDragging}
             />
           }
-          {/* {ImageList.map((img) => {
-            return (
-              <img
-                key={img.id}
-                id={img.id}
-                alt="lion"
-                src={img.src}
-                draggable="true"
-                onDragStart={(e) => {
-                  let imgTemp = {
-                    type: "image",
-                    id: itemNo,
-                    src: e.target.src,
-                    width: e.target.width,
-                    height: e.target.height,
-                  };
-                  setIsDragging(imgTemp);
-                }}
-              />
-            );
-          })}
-          {rectangleList.map((rectItem) => {
-            return (
-              <div
-                style={{
-                  width: rectItem.width,
-                  height: rectItem.height,
-                  backgroundColor: rectItem.fill,
-                  cursor: "move",
-                }}
-                data-shape-type="rect"
-                draggable="true"
-                onDragStart={(e) => {
-                  let rectTemp = rectangleList.find(
-                    (rec) => rec.id === rectItem.id
-                  );
-                  rectTemp.id = itemNo;
-                  setIsDragging(rectTemp);
-                }}
-              />
-            );
-          })} */}
         </Grid>
+        {/* Canvas Section */}
         <Grid item xs={10}>
           <>
-            {/* canvasToolbar */}
+            {/* Canvas Toolbar */}
             {memoisedToolbar}
+            {/* Canvas */}
             <div
               onDrop={handleOnDrop}
               onDragOver={(e) => {
@@ -471,7 +425,7 @@ const DrawingPanel = ({ boxWidth }) => {
                 ref={stageRef}
                 onMouseDown={checkDeselect}
                 onTouchStart={checkDeselect}
-                style={{ border: "1px solid grey" }}
+                style={{ border: '1px solid grey' }}
               >
                 <Layer>
                   {rects.map((rect, i) => {
@@ -484,15 +438,13 @@ const DrawingPanel = ({ boxWidth }) => {
                           onSelect={(e) => handleStoneSelect(e, rect)}
                           setSelectedItem={setSelectedItem}
                           onChange={(newAttrs) => {
-                            console.log("onchange newAttrs", newAttrs);
+                            console.log('onchange newAttrs', newAttrs);
                             const rectTemp = rects.slice();
                             rectTemp[i] = newAttrs;
                             setRects(rectTemp);
                           }}
                           onDragStart={(e) => {
-                            let rectTemp = rects.find(
-                              (rec) => rec.id === rect.id
-                            );
+                            let rectTemp = rects.find((rec) => rec.id === rect.id);
 
                             setIsDragging(rectTemp);
                           }}
@@ -515,9 +467,7 @@ const DrawingPanel = ({ boxWidth }) => {
                           setImages(imageTemp);
                         }}
                         onDragStart={(e) => {
-                          let imageTemp = images.find(
-                            (img) => img.id === image.id
-                          );
+                          let imageTemp = images.find((img) => img.id === image.id);
                           setIsDragging(imageTemp);
                         }}
                         ratio={getRatioForItem(+maxWidth)}
@@ -534,20 +484,11 @@ const DrawingPanel = ({ boxWidth }) => {
   );
 };
 
-const ResourcesSection = ({
-  ImageList,
-  rectangleList,
-  itemNo,
-  setIsDragging,
-}) => {
+const ResourcesSection = ({ ImageList, rectangleList, itemNo, setIsDragging }) => {
   return (
     <Box mr={3}>
       <Accordion defaultExpanded={true}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
           <Typography>Objects</Typography>
         </AccordionSummary>
         <AccordionDetails>
@@ -557,9 +498,9 @@ const ResourcesSection = ({
                 <Grid item xs={6}>
                   <Box
                     sx={{
-                      width: "100%",
-                      paddingTop: "100%",
-                      position: "relative",
+                      width: '100%',
+                      paddingTop: '100%',
+                      position: 'relative',
                     }}
                   >
                     <img
@@ -568,15 +509,15 @@ const ResourcesSection = ({
                       src={img.src}
                       draggable="true"
                       style={{
-                        position: "absolute",
+                        position: 'absolute',
                         top: 0,
                         left: 0,
-                        width: "100%",
-                        height: "100%",
+                        width: '100%',
+                        height: '100%',
                       }}
                       onDragStart={(e) => {
                         let imgTemp = {
-                          type: "image",
+                          type: 'image',
                           id: itemNo,
                           src: e.target.src,
                           width: e.target.naturalWidth,
@@ -593,11 +534,7 @@ const ResourcesSection = ({
         </AccordionDetails>
       </Accordion>
       <Accordion defaultExpanded={true}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel2a-content"
-          id="panel2a-header"
-        >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
           <Typography>Shapes</Typography>
         </AccordionSummary>
         <AccordionDetails>
@@ -607,27 +544,25 @@ const ResourcesSection = ({
                 <Grid item xs={6}>
                   <Box
                     sx={{
-                      width: "100%",
-                      paddingTop: "100%",
-                      position: "relative",
+                      width: '100%',
+                      paddingTop: '100%',
+                      position: 'relative',
                     }}
                   >
                     <div
                       style={{
-                        position: "absolute",
+                        position: 'absolute',
                         top: 0,
                         left: 0,
-                        width: "100%",
-                        height: "100%",
+                        width: '100%',
+                        height: '100%',
                         backgroundColor: rectItem.fill,
-                        cursor: "move",
+                        cursor: 'move',
                       }}
                       data-shape-type="rect"
                       draggable="true"
                       onDragStart={(e) => {
-                        let rectTemp = rectangleList.find(
-                          (rec) => rec.id === rectItem.id
-                        );
+                        let rectTemp = rectangleList.find((rec) => rec.id === rectItem.id);
                         rectTemp.id = itemNo;
                         setIsDragging(rectTemp);
                       }}
