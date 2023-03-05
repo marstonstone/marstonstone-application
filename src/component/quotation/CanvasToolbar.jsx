@@ -9,6 +9,7 @@ import {
   ListItemIcon,
   ListItemText,
   MenuItem,
+  OutlinedInput,
 } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 
@@ -21,9 +22,9 @@ const installOptions = [
 
 const materialOptions = ['A', 'B', 'C', 'D'];
 
-function CanvasToolbar({ item, handleChange, setIsFocused }) {
+function CanvasToolbar({ item, handleChange, setIsFocused, setSelectedItem }) {
   const [selectedOptions, setSelectedOptions] = useState(item?.options ?? []);
-  const [selectedMaterial, setSelectedMaterial] = useState('A');
+  const [selectedMaterial, setSelectedMaterial] = useState();
   const isAllSelected = installOptions.length > 0 && selectedOptions?.length === installOptions.length;
 
   const handleMultiSelectChange = (event) => {
@@ -59,35 +60,47 @@ function CanvasToolbar({ item, handleChange, setIsFocused }) {
   return (
     <Toolbar style={{ paddingLeft: 0 }}>
       <TextField
-        value={item?.width ?? '0'}
+        value={item?.width ?? ''}
         type="number"
         label="width"
         onChange={(e) => {
           handleChange({ ...item, width: +e.target.value });
+          setSelectedItem({ ...item, width: +e.target.value });
         }}
-        InputLabelProps={{ shrink: true }}
+        // InputLabelProps={{ shrink: true }}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         sx={{ mr: 1 }}
       />
       <TextField
-        value={item?.height ?? '0'}
+        value={item?.height ?? ''}
         type="number"
         label="height"
         onChange={(e) => {
           handleChange({ ...item, height: +e.target.value });
+          setSelectedItem({ ...item, height: +e.target.value });
         }}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        InputLabelProps={{ shrink: true }}
+        // InputLabelProps={{ shrink: true }}
         sx={{ mr: 1 }}
       />
-      <FormControl variant="outlined" size="small">
+      {/* <FormControl sx={{ mr: 1, minWidth: 150 }}>
         <InputLabel>Material</InputLabel>
-        <Select label="Material" value={selectedMaterial} onChange={handleMaterialChange} sx={{ mr: 1 }}>
+        <Select label="Material" value={selectedMaterial} onChange={handleMaterialChange}>
           {materialOptions.map((option) => (
             <MenuItem key={option} value={option}>
               <ListItemText primary={option} />
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl> */}
+      <FormControl sx={{ mr: 1, minWidth: 150 }}>
+        <InputLabel>Material</InputLabel>
+        <Select value={selectedMaterial} onChange={handleMaterialChange} autoWidth label="Material">
+          {materialOptions.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
             </MenuItem>
           ))}
         </Select>
@@ -104,13 +117,13 @@ function CanvasToolbar({ item, handleChange, setIsFocused }) {
 
 const MultiSelect = ({ selected, handleMultiSelectChange, isAllSelected }) => {
   return (
-    <FormControl sx={{ mr: 1 }}>
-      <InputLabel id="mutiple-select-label">Multiple Select</InputLabel>
+    <FormControl sx={{ mr: 1, minWidth: 150 }}>
+      <InputLabel>Install Options</InputLabel>
       <Select
-        labelId="mutiple-select-label"
         multiple
         value={selected}
         onChange={handleMultiSelectChange}
+        input={<OutlinedInput label="Install Options" />}
         renderValue={(selected) => selected.join(', ')}
       >
         <MenuItem value="all">

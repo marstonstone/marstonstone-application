@@ -47,8 +47,6 @@ const getRatioForItem = (maxWidth) => {
 const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelectedItem }) => {
   const shapeRef = useRef();
   const trRef = useRef();
-  const [currentWidth, setCurrentWidth] = useState(shapeProps.width);
-  const [currentHeight, setCurrentHeight] = useState(shapeProps.height);
 
   React.useEffect(() => {
     if (isSelected) {
@@ -103,8 +101,6 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelec
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
-              setCurrentWidth(newBox.width.toFixed(0));
-              setCurrentHeight(newBox.height.toFixed(0));
               setSelectedItem((prev) => ({
                 ...prev,
                 width: +newBox.width.toFixed(0),
@@ -118,7 +114,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelec
             }}
           />
           <Text
-            text={`W: ${currentWidth * ratio}, H: ${currentHeight * ratio}`}
+            text={`W: ${shapeProps.width * ratio}, H: ${shapeProps.height * ratio}`}
             fill={'black'}
             x={shapeRef.current.x()}
             y={shapeRef.current.y() - 20}
@@ -134,8 +130,6 @@ const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelec
   const [img] = useImage(imageProps.src);
   const imgRef = React.useRef();
   const trRef = React.useRef();
-  const [currentWidth, setCurrentWidth] = useState(imageProps.width);
-  const [currentHeight, setCurrentHeight] = useState(imageProps.height);
 
   useEffect(() => {
     if (isSelected) {
@@ -187,8 +181,6 @@ const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelec
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
-              setCurrentWidth(newBox.width.toFixed(0));
-              setCurrentHeight(newBox.height.toFixed(0));
               setSelectedItem((prev) => ({
                 ...prev,
                 width: +newBox.width.toFixed(0),
@@ -201,7 +193,7 @@ const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelec
             }}
           />
           <Text
-            text={`W: ${currentWidth * ratio}, H: ${currentHeight * ratio}`}
+            text={`W: ${imageProps.width * ratio}, H: ${imageProps.height * ratio}`}
             fill={'black'}
             x={imgRef.current.x()}
             y={imgRef.current.y() - 20}
@@ -274,13 +266,11 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
 
   //Delete single item in key down
   useEffect(() => {
-    console.log('isFocused', isFocused);
     const handleDelete = (event) => {
       if (isFocused) {
         console.log(isFocused);
         return;
       } else {
-        console.log('delete continue');
         if ((event.key === 'Delete' || event.key === 'Backspace') && selectedItem) {
           setImages((prev) => prev.filter((image) => image.id !== selectedItem?.id));
           setRects((prev) => prev.filter((rect) => rect.id !== selectedItem?.id));
@@ -334,7 +324,10 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
   };
 
   const handleUpdateItem = (updatedItem) => {
-    console.log(updatedItem);
+    console.log('updatedItem', updatedItem);
+    if (updatedItem?.id === selectedItem?.id) {
+      // setSelectedItem(updatedItem);
+    }
     if (updatedItem?.type === 'image') {
       const updatedItems = images.map((img) => {
         if (img.id === updatedItem.id) {
@@ -372,9 +365,16 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
   }, [maxWidth]);
 
   const memoisedToolbar = useMemo(() => {
-    if (!selectedItem) return;
-    return <CanvasToolbar item={selectedItem} handleChange={handleUpdateItem} setIsFocused={setIsFocused} />;
-  }, [selectedItem]);
+    // if (!selectedItem) return;
+    return (
+      <CanvasToolbar
+        item={selectedItem}
+        handleChange={handleUpdateItem}
+        setIsFocused={setIsFocused}
+        setSelectedItem={setSelectedItem}
+      />
+    );
+  }, [selectedItem, images, rects]);
 
   return (
     <div>
