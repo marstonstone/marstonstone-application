@@ -23,7 +23,7 @@ const moveItemToTop = (item) => {
   selectedShape.getLayer().batchDraw();
 };
 
-const getRatioForItem = (maxWidth) => {
+const getPlottingScale = (maxWidth) => {
   let ratio = 1;
   if (maxWidth <= 1000) {
     return ratio;
@@ -44,11 +44,18 @@ const getRatioForItem = (maxWidth) => {
   return ratio;
 };
 
-const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelectedItem }) => {
+const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, plottingScale, setSelectedItem, selectedItem }) => {
   const shapeRef = useRef();
   const trRef = useRef();
+  const [scaledWidth, setScaledWidth] = useState(shapeProps.width * plottingScale);
+  const [scaledHeight, setScaledHeight] = useState(shapeProps.height * plottingScale);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    setScaledWidth(shapeProps.width * plottingScale);
+    setScaledHeight(shapeProps.height * plottingScale);
+  }, [shapeProps]);
+
+  useEffect(() => {
     if (isSelected) {
       // we need to attach transformer manually
       trRef.current.nodes([shapeRef.current]);
@@ -101,6 +108,8 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelec
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
+              setScaledWidth(+(newBox.width * plottingScale).toFixed(0));
+              setScaledHeight(+(newBox.height * plottingScale).toFixed(0));
               setSelectedItem((prev) => ({
                 ...prev,
                 width: +newBox.width.toFixed(0),
@@ -114,7 +123,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelec
             }}
           />
           <Text
-            text={`W: ${shapeProps.width * ratio}, H: ${shapeProps.height * ratio}`}
+            text={` ${scaledWidth} x ${scaledHeight}`}
             fill={'black'}
             x={shapeRef.current.x()}
             y={shapeRef.current.y() - 20}
@@ -126,10 +135,12 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, ratio, setSelec
   );
 };
 
-const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelectedItem }) => {
+const ImageItem = ({ imageProps, isSelected, onSelect, onChange, plottingScale, setSelectedItem }) => {
   const [img] = useImage(imageProps.src);
   const imgRef = React.useRef();
   const trRef = React.useRef();
+  const [scaledWidth, setScaledWidth] = useState(imageProps.width * plottingScale);
+  const [scaledHeight, setScaledHeight] = useState(imageProps.height * plottingScale);
 
   useEffect(() => {
     if (isSelected) {
@@ -138,6 +149,12 @@ const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelec
       trRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
+
+  //Update width and height when images changes
+  useEffect(() => {
+    setScaledWidth(imageProps.width * plottingScale);
+    setScaledHeight(imageProps.height * plottingScale);
+  }, [imageProps]);
 
   return (
     <React.Fragment>
@@ -165,6 +182,7 @@ const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelec
           // we will reset it back
           node.scaleX(1);
           node.scaleY(1);
+
           onChange({
             ...imageProps,
             x: node.x(),
@@ -181,6 +199,9 @@ const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelec
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
               // limit resize
+              setScaledWidth(+(newBox.width * plottingScale).toFixed(0));
+              setScaledHeight(+(newBox.height * plottingScale).toFixed(0));
+
               setSelectedItem((prev) => ({
                 ...prev,
                 width: +newBox.width.toFixed(0),
@@ -193,7 +214,7 @@ const ImageItem = ({ imageProps, isSelected, onSelect, onChange, ratio, setSelec
             }}
           />
           <Text
-            text={`W: ${imageProps.width * ratio}, H: ${imageProps.height * ratio}`}
+            text={` ${scaledWidth} x ${scaledHeight}`}
             fill={'black'}
             x={imgRef.current.x()}
             y={imgRef.current.y() - 20}
@@ -234,12 +255,13 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
   const [rects, setRects] = useState(order?.canvas?.shapes ?? []);
   const [isDragging, setIsDragging] = useState(false);
   const [itemNo, setItemNo] = useState('1');
-  const [maxWidth, setMaxWidth] = useState(null);
+  const [maxWidth, setMaxWidth] = useState(order?.canvas?.maxWidth ?? null);
+  const [plottingScale, setPlottingScale] = useState(order?.canvas?.plottingScale ?? 1);
   const [isFocused, setIsFocused] = useState(false);
 
   //update Canvas data to be saved to redux
   useEffect(() => {
-    setCanvasData((prev) => ({ ...prev, objects: [...images], shapes: [...rects] }));
+    setCanvasData((prev) => ({ ...prev, objects: [...images], shapes: [...rects], plottingScale, maxWidth }));
   }, [images, rects]);
 
   const checkDeselect = (e) => {
@@ -259,7 +281,7 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
   };
 
   const handleStoneSelect = (e, stone) => {
-    //    moveItemToTop(e.target);
+    // moveItemToTop(e.target);
     console.log('selectedId', stone);
     setSelectedItem(stone);
   };
@@ -360,9 +382,6 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
   useEffect(() => {
     console.log('isDragging', isDragging);
   }, [isDragging]);
-  useEffect(() => {
-    console.log('maxWidth', maxWidth);
-  }, [maxWidth]);
 
   const memoisedToolbar = useMemo(() => {
     // if (!selectedItem) return;
@@ -372,6 +391,7 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
         handleChange={handleUpdateItem}
         setIsFocused={setIsFocused}
         setSelectedItem={setSelectedItem}
+        plottingScale={plottingScale}
       />
     );
   }, [selectedItem, images, rects]);
@@ -386,6 +406,7 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
         helperText="please enter the maximum length of you project"
         onChange={(e) => {
           setMaxWidth(e.target.value);
+          setPlottingScale(getPlottingScale(+e.target.value));
         }}
       />
 
@@ -437,10 +458,16 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
                           isSelected={rect.id === selectedItem?.id}
                           onSelect={(e) => handleStoneSelect(e, rect)}
                           setSelectedItem={setSelectedItem}
+                          selectedItem={selectedItem}
                           onChange={(newAttrs) => {
                             console.log('onchange newAttrs', newAttrs);
+                            let updatedItem = {
+                              ...newAttrs,
+                              scaledWidth: newAttrs.width * plottingScale,
+                              scaledHeight: newAttrs.height * plottingScale,
+                            };
                             const rectTemp = rects.slice();
-                            rectTemp[i] = newAttrs;
+                            rectTemp[i] = updatedItem;
                             setRects(rectTemp);
                           }}
                           onDragStart={(e) => {
@@ -448,7 +475,7 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
 
                             setIsDragging(rectTemp);
                           }}
-                          ratio={getRatioForItem(+maxWidth)}
+                          plottingScale={plottingScale}
                         />
                       </>
                     );
@@ -459,18 +486,24 @@ const DrawingPanel = ({ boxWidth, setCanvasData }) => {
                         key={i}
                         imageProps={image}
                         isSelected={image.id === selectedItem?.id}
+                        selectedItem={selectedItem}
                         setSelectedItem={setSelectedItem}
                         onSelect={(e) => handleImageSelect(e, image)}
                         onChange={(newAttrs) => {
+                          let updatedItem = {
+                            ...newAttrs,
+                            scaledWidth: newAttrs.width * plottingScale,
+                            scaledHeight: newAttrs.height * plottingScale,
+                          };
                           const imageTemp = images.slice();
-                          imageTemp[i] = newAttrs;
+                          imageTemp[i] = updatedItem;
                           setImages(imageTemp);
                         }}
                         onDragStart={(e) => {
                           let imageTemp = images.find((img) => img.id === image.id);
                           setIsDragging(imageTemp);
                         }}
-                        ratio={getRatioForItem(+maxWidth)}
+                        plottingScale={plottingScale}
                       />
                     );
                   })}

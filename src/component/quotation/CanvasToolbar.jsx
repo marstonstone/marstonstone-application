@@ -22,10 +22,15 @@ const installOptions = [
 
 const materialOptions = ['A', 'B', 'C', 'D'];
 
-function CanvasToolbar({ item, handleChange, setIsFocused, setSelectedItem }) {
+function CanvasToolbar({ item, handleChange, setIsFocused, setSelectedItem, plottingScale }) {
   const [selectedOptions, setSelectedOptions] = useState(item?.options ?? []);
-  const [selectedMaterial, setSelectedMaterial] = useState();
+  const [selectedMaterial, setSelectedMaterial] = useState('');
   const isAllSelected = installOptions.length > 0 && selectedOptions?.length === installOptions.length;
+
+  useEffect(() => {
+    setSelectedOptions(item?.options ?? []);
+    setSelectedMaterial(item?.material ?? '');
+  }, [item]);
 
   const handleMultiSelectChange = (event) => {
     const value = event.target.value;
@@ -52,20 +57,16 @@ function CanvasToolbar({ item, handleChange, setIsFocused, setSelectedItem }) {
     handleChange({ ...item, options: [...selectedOptions] });
   }, [selectedOptions]);
 
-  useEffect(() => {
-    setSelectedOptions(item?.options ?? []);
-    setSelectedMaterial(item?.material ?? 'A');
-  }, [item]);
-
   return (
     <Toolbar style={{ paddingLeft: 0 }}>
       <TextField
-        value={item?.width ?? ''}
+        value={item?.width * plottingScale}
         type="number"
         label="width"
         onChange={(e) => {
-          handleChange({ ...item, width: +e.target.value });
-          setSelectedItem({ ...item, width: +e.target.value });
+          const updatedItem = { ...item, width: +e.target.value / plottingScale };
+          handleChange({ ...updatedItem, scaledWidth: +e.target.value });
+          setSelectedItem(updatedItem);
         }}
         // InputLabelProps={{ shrink: true }}
         onFocus={() => setIsFocused(true)}
@@ -73,31 +74,29 @@ function CanvasToolbar({ item, handleChange, setIsFocused, setSelectedItem }) {
         sx={{ mr: 1 }}
       />
       <TextField
-        value={item?.height ?? ''}
+        value={item?.height * plottingScale}
         type="number"
         label="height"
         onChange={(e) => {
-          handleChange({ ...item, height: +e.target.value });
-          setSelectedItem({ ...item, height: +e.target.value });
+          const updatedItem = { ...item, height: +e.target.value / plottingScale };
+          handleChange({
+            ...updatedItem,
+            scaledHeight: +e.target.value,
+          });
+          setSelectedItem(updatedItem);
+          // setScaledHeight(+e.target.value);
         }}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         // InputLabelProps={{ shrink: true }}
         sx={{ mr: 1 }}
       />
-      {/* <FormControl sx={{ mr: 1, minWidth: 150 }}>
-        <InputLabel>Material</InputLabel>
-        <Select label="Material" value={selectedMaterial} onChange={handleMaterialChange}>
-          {materialOptions.map((option) => (
-            <MenuItem key={option} value={option}>
-              <ListItemText primary={option} />
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl> */}
       <FormControl sx={{ mr: 1, minWidth: 150 }}>
         <InputLabel>Material</InputLabel>
         <Select value={selectedMaterial} onChange={handleMaterialChange} autoWidth label="Material">
+          <MenuItem value="" disabled>
+            <em>Select a material</em>
+          </MenuItem>
           {materialOptions.map((option) => (
             <MenuItem key={option} value={option}>
               {option}
