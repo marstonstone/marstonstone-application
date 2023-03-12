@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import ButtonSection from './ButtonSection';
-import DrawingPanel from './DrawingPanel';
+import ButtonSection from '../ButtonSection';
+import Canvas from './Canvas';
+import { Box } from '@mui/material';
 
 function DrawPad({ handleNext, handleBack, activeStep, boxWidth }) {
   const [canvasData, setCanvasData] = useState({});
   return (
     <>
-      <DrawingPanel boxWidth={boxWidth} setCanvasData={setCanvasData} />
+      <Box>
+        <Canvas boxWidth={boxWidth} setCanvasData={setCanvasData} />
+      </Box>
+
       <ButtonSection
         handleBack={handleBack}
         handleNext={() => {

@@ -1,37 +1,40 @@
-import React, { useState, useEffect } from "react";
-import Navbar from "./component/Navbar";
-import Header from "./component/Header/Header";
-import { useLocation } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Routes, Route } from "react-router-dom";
-import ToBeConfirm from "./page/ToBeConfirm";
-import Quotation from "./page/Quotation";
-import Supplier from "./page/Supplier";
-import Processing from "./page/Processing";
-import Done from "./page/Done";
-import PageNotFound from "./page/PageNotFound";
-import Customer from "./page/Customer";
-import Home from "./page/Home";
-import Box from "@mui/material/Box";
-import { ThemeProvider, responsiveAppTheme } from "./styles/theme";
+import React, { useState, useEffect } from 'react';
+import Navbar from './component/Navigation/Navbar';
+import Header from './component/Header/Header';
+import { useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { Routes, Route } from 'react-router-dom';
+import ToBeConfirm from './page/ToBeConfirm';
+import Quotation from './page/Quotation';
+import Supplier from './page/Supplier';
+import Processing from './page/Processing';
+import Done from './page/Done';
+import PageNotFound from './page/PageNotFound';
+import Customer from './page/Customer';
+import Home from './page/Home';
+import Box from '@mui/material/Box';
+import { ThemeProvider, responsiveAppTheme } from './styles/theme';
+import SideBar from './component/Navigation/SideBar';
 
 function App() {
   const [title, setTitle] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
-    const parsedTitle = location.pathname.replace(/\W/g, " ");
+    const parsedTitle = location.pathname.replace(/\W/g, ' ');
     setTitle(parsedTitle.toUpperCase());
   }, [location]);
   return (
     <ThemeProvider theme={responsiveAppTheme}>
-      <div style={{ display: "flex" }}>
+      <div style={{ display: 'flex' }}>
         <Navbar />
-        <Box style={{ width: "100%" }}>
-          <Header title={title} />
+        {/* <SideBar /> */}
+        <Box style={{ width: '100%' }}>
+          {/* <Header title={title} /> */}
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/Home" element={<Home />} />
             <Route path="/toBeConfirm" element={<ToBeConfirm />} />
             <Route path="/quotation" element={<Quotation />} />
             <Route path="/supplier" element={<Supplier />} />

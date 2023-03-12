@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
 function Done() {
-  return <div></div>;
+  return <div>done</div>;
 }
 
 export default Done;

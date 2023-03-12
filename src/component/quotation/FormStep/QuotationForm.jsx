@@ -16,8 +16,8 @@ import Select from '@mui/material/Select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { enum as zodEnum, number, object, string, boolean } from 'zod';
 import { useDispatch, useSelector } from 'react-redux';
-import { cacheOrder } from '../../redux/slices/orderSlice';
-import ButtonSection from './ButtonSection';
+import { cacheOrder } from '../../../redux/slices/orderSlice';
+import ButtonSection from '../ButtonSection';
 
 const schema = object({
   fName: string().min(2, 'Please enter a valid first name').max(32, 'First name must be less than 100 characters'),

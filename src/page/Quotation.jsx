@@ -4,9 +4,9 @@ import { StepLabel, Stepper, Step } from '@mui/material';
 import { Box, Button } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 
-import DrawPad from '../component/quotation/DrawPad';
-import ReviewQuotation from '../component/quotation/ReviewQuotation';
-import QuotationForm from '../component/quotation/QuotationForm';
+import DrawPad from '../component/Quotation/CanvasStep/DrawPad';
+import ReviewQuotation from '../component/Quotation/ReviewStep/ReviewQuotation';
+import QuotationForm from '../component/Quotation/FormStep/QuotationForm';
 import { cacheOrder } from '../redux/slices/orderSlice';
 
 function Quotation() {
@@ -41,7 +41,7 @@ function Quotation() {
         );
       case 1:
         return (
-          <Box ml={20} mr={20}>
+          <Box b>
             <DrawPad handleBack={handleBack} handleNext={handleNext} activeStep={step} boxWidth={boxWidth} />
           </Box>
         );
@@ -65,8 +65,6 @@ function Quotation() {
       }}
     >
       <Box
-        ml={10}
-        mr={10}
         style={{
           display: 'flex',
           flexDirection: 'column',
